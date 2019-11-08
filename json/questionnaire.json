@@ -1,0 +1,18 @@
+[{
+	"class": "Quiet",
+	"type": "range",
+	"min": "-100",
+	"max": "100",
+	"value": "0"
+}, {
+	"class": "Knowlegable",
+	"type": "range",
+	"min": "-100",
+	"max": "100",
+	"value": "0"
+}, {
+	"class": "Comments",
+	"type": "textarea",
+  "value": "",
+	"height": "100px"
+}]

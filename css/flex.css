@@ -1,0 +1,57 @@
+/* CSS content for flex display */
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0px;
+}
+
+input, textarea {
+  width: 100%;
+  margin-left: 50px;
+  margin-right: 50px;
+  resize: none;
+}
+
+label {
+  width: 100%;
+  padding: 10px 10px 10px 50px;
+  font-size: 25px;
+}
+
+button {
+  font-size: 30px;
+}
+
+.flexContainer {
+  min-height: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+}
+
+.flexChildren {
+  display: flex;
+  flex-direction: column;
+  flex-basis: calc(50% - 40px);
+  justify-content: center;
+}
+
+.flexText {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.ta-group {
+  background-color: lightblue;
+  font-size: 50px;
+  margin: 10px 20px;
+}
+
+.student {
+  background-color: lightgreen;
+  font-size: 30px;
+  padding: 5% 0px;
+  margin: 10px 20px;
+}
