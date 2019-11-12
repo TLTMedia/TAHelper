@@ -1,8 +1,8 @@
 <?php
 $studentName = $_GET["studentName"];
-$file = "questionInfo/$studentName";
+$file = "questionInfo/$studentName.json";
 
-  if ($_GET) {
+  if (!isset($_POST["data"])) {
     $data = (file_exists($file)) ? file_get_contents($file) : file_get_contents("json/questionnaire.json");
     print($data);
   } else {
