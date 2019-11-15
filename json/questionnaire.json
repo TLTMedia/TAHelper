@@ -1,15 +1,23 @@
 [{
-	"class": "Quiet",
-	"type": "range",
-	"min": "-100",
-	"max": "100",
-	"value": "0"
+	"class": "Attendance",
+	"type": "radio",
+	"options": 4,
+	"value": ""
 }, {
-	"class": "Knowlegable",
-	"type": "range",
-	"min": "-100",
-	"max": "100",
-	"value": "0"
+	"class": "Focused",
+	"type": "radio",
+	"options": 4,
+	"value": ""
+}, {
+	"class": "Participation",
+	"type": "radio",
+	"options": 4,
+	"value": ""
+}, {
+	"class": "Rating",
+	"type": "radio",
+	"options": 3,
+	"value": ""
 }, {
 	"class": "Comments",
 	"type": "textarea",
