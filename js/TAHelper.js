@@ -16,10 +16,11 @@ function init() {
 
 class TAHelper {
 
+  /* Class constructor */
   constructor (courseInfo, taInfo) {
     this.courseInfo = courseInfo[0];
     this.taInfo = taInfo[0];
-    console.log(this.courseInfo, this.taInfo)
+    // console.log(this.courseInfo, this.taInfo)
   }
 
   /* Loads the initial page */
@@ -30,12 +31,13 @@ class TAHelper {
     this.taGroupInfo = this.getTAGroupInfo(taName);
     this.taStudGroups = this.getTAStudGroups(taName);
     // this.studGroupInfo = this.getStudGroupInfo();
-    this.showTAGroups();
+
+    this.initTAGroups();
   }
 
 
-  /* Displays a list of all the groups that the TA oversees */
-  showTAGroups() {
+  /* Creates a list of all the groups that the TA oversees */
+  initTAGroups() {
     var taStudGroupsDiv = this.taGroupInfo.Group.map(i => $('<div/>', {
       id: `group-${i.id}`,
       class: `ta-group flexChildren`
@@ -43,20 +45,9 @@ class TAHelper {
       class: `flexText`,
       html: `Group ${i.id}`
     })));
+
     this.addToParentDivById('group_divs' /* parent container */, taStudGroupsDiv);
-
-    $('.ta-group').click((evt) => {
-      var clickedItem = $(evt.currentTarget);
-      clickedItem.off(); // removes click event
-      clickedItem.removeClass("flexChildren").addClass("flexContainer");
-
-      var clickedText = $(clickedItem.children()[0]);
-      clickedText.css({ width: "100%", padding: "20px" });
-
-      var clickedID = clickedItem.attr("id");
-      this.hideAndExpand(clickedItem);
-      this.showStudentsInGroup(clickedID);
-    });
+    $('.ta-group').click(evt => this.handleClickEvent($(evt.currentTarget)));
   }
 
 
@@ -64,7 +55,7 @@ class TAHelper {
   showStudentsInGroup (groupID) {
     this.showBackBtn();
 
-    var studGroups = this.getStudsInGroup(groupID.slice(6, 7) /* group ID */);
+    var studGroups = this.getStudsInGroup(groupID);
     var studDivs = studGroups.map(i => $('<div/>', {
       id: `${i.Name}`,
       "data-hexID":`${i.hexID}`,
@@ -73,24 +64,9 @@ class TAHelper {
       class: `flexText`,
       html: `${i.Name.replace(/_/g, ' ')}`  // replaces all underscore with spaces
     })));
-    this.addToParentDivById(groupID, studDivs);
 
-    $('.student').click((evt) => {
-      var clickedItem = $(evt.currentTarget);
-      clickedItem.off(); // removes click event
-      clickedItem.removeClass("flexChildren").addClass("flexContainer");
-      clickedItem.css({ margin: "0px", "padding-top": "10px" });
-
-      var clickedText = $(clickedItem.children()[0]);
-      clickedText.css({ width: "100%", "padding-left": "10px", "justify-content": "left" });
-
-      var clickedClass = clickedItem.attr("class");
-      var clickedGroupID = clickedClass.split(" ")[1].slice(6, 7);  // group ID
-
-      var studentName = clickedItem.attr("id");
-      this.hideAndExpand(clickedItem);
-      this.showStudentInfo(studentName, clickedGroupID);
-    });
+    this.addToParentDivById(`group-${groupID}`, studDivs);
+    $('.student').click(evt => this.handleClickEvent($(evt.currentTarget)));
   }
 
 
@@ -185,10 +161,8 @@ class TAHelper {
   /* Returns array of students groups */
   getStudGroup (groupID, studentGroups) {
     return Object.keys(studentGroups)
-      .filter((item) => {
-        return studentGroups[item].Group == groupID
-      })
-      .map((item) =>Object.assign({hexID:item},studentGroups[item]));
+      .filter((item) => { return studentGroups[item].Group == groupID })
+      .map((item) => Object.assign( {hexID: item}, studentGroups[item] ));
   }
 
 
@@ -216,7 +190,7 @@ class TAHelper {
   hideAndExpand (item) {
     var itemID = item.attr("id")
     var itemClass = '.' + item.attr("class").split(" ")[0];
-    console.log(item, itemID, itemClass)
+    // console.log(item, itemID, itemClass)
 
     this.grow(item);
     this.hide(itemClass, itemID);
@@ -227,7 +201,7 @@ class TAHelper {
   hide (className, skipID) {
     for (var i of $(className)) {
       if ($(i).attr("id") != skipID) {
-        $(i).hide(500); // animated
+        $(i).hide(300); // animated
       }
     }
   }
@@ -236,7 +210,8 @@ class TAHelper {
   /* Expands the item to window size */
   grow (item) {
     item.parent().css({ display: "block" });
-    item.animate({ width: "100%", height: "100%", left: 0, top: 0 });
+    item.animate({ height: "100%" });
+    // item.animate( { height: "100%" }, () => { console.log("done") });
   }
 
 
@@ -254,9 +229,47 @@ class TAHelper {
           html: `${option}`
         }))
       );
+    } else {
+      return $(`<${tag}>`, data);
+    }
+  }
+
+
+  /* Handles click event when a group is selected */
+  handleClickEvent (clickedItem) {
+    var clickedClass = clickedItem.attr("class").split(" ")[0];
+    console.log(clickedClass)
+
+    clickedItem.off(); // removes click event
+    clickedItem.removeClass("flexChildren").addClass("flexContainer");
+    if (clickedClass == 'student') {
+      clickedItem.css({ margin: "0px", "padding-top": "10px" });
     }
 
-    return $(`<${tag}>`, data);
+    var clickedText = $(clickedItem.children()[0]);
+    if (clickedClass == 'ta-group') {
+      clickedText.addClass("flexContainerText");
+    } else {
+      clickedText.addClass("flexChildrenText");
+    }
+
+    var clickedID = (clickedClass == 'ta-group') ? clickedItem.attr("id").slice(6, 7) : clickedItem.attr("class").split(" ")[1].slice(6, 7);
+    this.hideAndExpand(clickedItem);
+    if (clickedClass == 'ta-group') {
+      this.showStudentsInGroup(clickedID);
+    } else {
+      var studentName = clickedItem.attr("id");
+      this.showStudentInfo(studentName, clickedID);
+    }
+  }
+
+
+  /* Handles click event for back button */
+  handleBackRequest() {
+    $('#group_divs').attr("style", "");
+    $('.student').remove();
+    $('.ta-group').remove();
+    this.initTAGroups();
   }
 
 
@@ -267,18 +280,15 @@ class TAHelper {
       html: 'Back'
     });
 
-    $(backBtn).click(function(e) {
-      console.log($(this))
-    })
-
     $(backBtn).hide();  // initially hidden
-    this.addToParentDivById('back', backBtn);
+    $(backBtn).click(evt => this.handleBackRequest());
+    this.addToParentDivById('back' /* button parent container */, backBtn);
   }
 
 
   /* Turns back button visible */
   showBackBtn() {
-    $('#backBtn').show(500);  // animated
+    $('#backBtn').show(300);  // animated
   }
 
 }
