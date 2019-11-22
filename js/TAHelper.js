@@ -20,24 +20,123 @@ class TAHelper {
   constructor (courseInfo, taInfo) {
     this.courseInfo = courseInfo[0];
     this.taInfo = taInfo[0];
+    // console.log(this.courseInfo, this.taInfo)
   }
+
+  /* Returns information on all of the groups that the TA oversees */
+  getTAGroupsInfo (taName) {
+    return this.courseInfo["TA Groups"][taName];
+  }
+
+
+  /* Returns information on all of the students in the course */
+  getStudGroupsInfo() {
+    return this.courseInfo["Student Groups"];
+  }
+
+
+  /* Returns array of all of the students in the same group as the specified TA */
+  getTAStudGroups (taName) {
+    var groupInfo = this.getTAGroupsInfo(taName);
+    return groupInfo.Group.map(i => this.getStudGroup(i.id, this.courseInfo["Student Groups"]));
+  }
+
+
+  /* Returns array of students groups */
+  getStudGroup (groupID, studentGroups) {
+    return Object.keys(studentGroups)
+      .filter((item) => { return studentGroups[item].Group == groupID })
+      .map((item) => Object.assign( {hexID: item}, studentGroups[item] ));
+  }
+
+
+  /* Returns array of students in group */
+  getStudsInGroup (groupID) {
+    return this.taStudGroups.filter(i => i[0].Group == groupID)[0];
+  }
+
 
   /* Loads the initial page */
   loaded() {
-    this.addBackBtn();
-
     var taName = `${this.taInfo.nickname} ${this.taInfo.sn}`.replace(/ /g,"_"); // replaces all spaces with underscore
-    this.taGroupInfo = this.getTAGroupInfo(taName);
+    this.taGroupInfo = this.getTAGroupsInfo(taName);
     this.taStudGroups = this.getTAStudGroups(taName);
-    // this.studGroupInfo = this.getStudGroupInfo();
 
-    this.showTAGroups();
+    this.ui = new TAHelperUI(this.taGroupInfo, this.taStudGroups);
+    this.ui.addBackBtn();
+    this.ui.showTAGroups();
+
+    // install an event listener to be triggered when a student has been selected
+    $('#group_divs').submit((evt, studInfo) => {
+      this.initStudForm(studInfo[0], studInfo[1]);
+    });
   }
 
 
+  /* Retrieves or intializes selected student's copy of questionnaire */
+  initStudForm (studentName, groupID) {
+    var hexID = this.getStudsInGroup(groupID).filter(stud => stud.Name == studentName)[0].hexID;
+    var url = `questionInfo.php?studentName=${studentName}_${hexID}`;
+
+    $.getJSON(url).done(result => {
+      this.ui.setTemplate(result);  // set ui template
+
+      // delay for ui to finish loading
+      setTimeout(() =>  {
+        $(`#${studentName} input`).on('input change', (evt)=> {
+          var className = $(evt.currentTarget).attr("class");
+          var value = $(evt.currentTarget).val();
+
+          if (evt.type == 'change') {
+            this.updateUI(className, value);
+            this.sendQuestionnaire(url, result);
+          }
+        })
+
+        $(`#${studentName} textarea`).on('change blur', (evt)=> {
+          var className = $(evt.currentTarget).attr("class");
+          var value = $(evt.currentTarget).val();
+          this.updateUI(className, value);
+          this.sendQuestionnaire(url, result);
+        })}, 10);
+    });
+  }
+
+
+  /* Update the form UI to correctly reflect changes to data */
+  updateUI (question, val) {
+    if (question == 'Comments') {
+      this.ui.setHTML(question, val);
+    } else {
+      this.ui.setHTML(question.split('-')[0], val);
+    }
+  }
+
+
+  /* Post updated results to student's copy of questionnaire */
+  sendQuestionnaire (url, form) {
+    $.post(url, { data: form });
+  }
+
+}
+
+
+
+class TAHelperUI {
+
+  /* Class constructor */
+  constructor (groupInfo, studInfo) {
+    this.groupInfo = groupInfo;
+    this.studInfo = studInfo;
+    console.log(this.groupInfo, this.studInfo)
+  }
+
+  /* Setter function */
+  setTemplate (uiTemplate) { this.template = uiTemplate; }
+
   /* Creates a list of all the groups that the TA oversees */
   showTAGroups() {
-    var taStudGroupsDiv = this.taGroupInfo.Group.map(i => $('<div/>', {
+    var taStudGroupsDiv = this.groupInfo.Group.map(i => $('<div/>', {
       id: `group-${i.id}`,
       class: `ta-group flexChildren`
     }).append($('<div/>', {
@@ -54,7 +153,7 @@ class TAHelper {
   showStudentsInGroup (groupID) {
     this.showBackBtn();
 
-    var studGroups = this.getStudsInGroup(groupID);
+    var studGroups = this.studInfo.filter(i => i[0].Group == groupID)[0];
     var studDivs = studGroups.map(i => $('<div/>', {
       id: `${i.Name}`,
       "data-hexID":`${i.hexID}`,
@@ -70,9 +169,12 @@ class TAHelper {
 
 
   /* Displays student information */
-  showStudentInfo (studentName, groupID) {
-    var hexID = this.taStudGroups.filter(group => group[0].Group == groupID)[0].filter(stud => stud.Name == studentName)[0].hexID;
-    var url = `questionInfo.php?studentName=${studentName}_${hexID}`;
+  showStudentInfo (studentName) {
+    // make sure that a UI template has been provided, otherwise return error
+    if ($.type(this.template) == 'undefined') {
+      console.log("Please define a UI template first")
+      return;
+    }
 
     var tagTypes = {
       "radio": "input",
@@ -90,83 +192,27 @@ class TAHelper {
       4: ["Often", "Occasionally", "Rarely", "Not sure"]
     };
 
-    $.getJSON(url).done(result => {
-      var formDivs = result.map(i => [ $('<label/>', {
-        class: `${i.class}-label`,
-        for: `${i.class}`,
-        html: `${formLabels[i.class]}`,
-      }), ...this.makeFormInput(tagTypes[i.type], optionLabels[i.options], i) ]);
+    var formDivs = this.template.map(i => [ $('<label/>', {
+      class: `${i.class}-label`,
+      for: `${i.class}`,
+      html: `${formLabels[i.class]}`,
+    }), ...this.makeFormInput(tagTypes[i.type], optionLabels[i.options], i) ]);
 
-      $.each(formDivs, (i) => {
-        this.addToParentById(studentName, formDivs[i]);
-      });
-
-      $(`#${studentName} input`).on('input change', (evt)=> {
-        var className = $(evt.currentTarget).attr("class");
-        var value = $(evt.currentTarget).val();
-
-        if (evt.type == 'change') {
-          this.updateFormHTML(result, className, value);
-          this.sendQuestionnaire(url, result);
-        }
-      })
-
-      $(`#${studentName} textarea`).on('change blur', (evt)=> {
-        var className = $(evt.currentTarget).attr("class");
-        var value = $(evt.currentTarget).val();
-        this.updateFormHTML(result, className, value);
-        this.sendQuestionnaire(url, result);
-      });
+    $.each(formDivs, (i) => {
+      this.addToParentById(studentName, formDivs[i]);
     });
   }
 
 
-  /* Update the text on the form with a new value */
-  updateFormHTML (form, question, newValue) {
-    if (question == 'Comments') {
-      form.find(item => item.class == `${question}`).html = newValue;
+  /* Updates any data changes to UI */
+  setHTML (inputType, value) {
+    var inputElem = this.template.find(item => item.class == `${inputType}`);
+
+    if (inputType == 'Comments') {
+      inputElem.html = value;
     } else {
-      form.find(item => item.class == `${question.split('-')[0]}`).value = newValue;
+      inputElem.value = value;
     }
-  }
-
-
-  /* Post updated results to student's copy of questionnaire */
-  sendQuestionnaire (url, form) {
-    $.post(url, { data: form });
-  }
-
-
-  /* Returns information on all of the groups that the TA oversees */
-  getTAGroupInfo (taName) {
-    return this.courseInfo["TA Groups"][taName];
-  }
-
-
-  /* Returns information on all of the students in the course */
-  getStudGroupInfo() {
-    return this.courseInfo["Student Groups"];
-  }
-
-
-  /* Returns array of all of the students in the same group as the specified TA */
-  getTAStudGroups (taName) {
-    var groupInfo = this.getTAGroupInfo(taName);
-    return groupInfo.Group.map(i => this.getStudGroup(i.id, this.courseInfo["Student Groups"]));
-  }
-
-
-  /* Returns array of students groups */
-  getStudGroup (groupID, studentGroups) {
-    return Object.keys(studentGroups)
-      .filter((item) => { return studentGroups[item].Group == groupID })
-      .map((item) => Object.assign( {hexID: item}, studentGroups[item] ));
-  }
-
-
-  /* Returns array of students in group */
-  getStudsInGroup (groupID) {
-    return this.taStudGroups.filter(i => i[0].Group == groupID)[0];
   }
 
 
@@ -188,6 +234,7 @@ class TAHelper {
   hideAndExpand (item) {
     var itemID = item.attr("id")
     var itemClass = '.' + item.attr("class").split(" ")[0];
+    // console.log(item, itemID, itemClass)
 
     this.grow(item);
     this.hide(itemClass, itemID);
@@ -233,6 +280,7 @@ class TAHelper {
 
   /* Handles click event when a group is selected */
   handleClickEvent (clickedItem) {
+    // console.log(clickedItem)
     var clickedClass = clickedItem.attr("class").split(" ")[0];
 
     clickedItem.off(); // removes click event
@@ -254,7 +302,8 @@ class TAHelper {
       this.showStudentsInGroup(clickedID);
     } else {
       var studentName = clickedItem.attr("id");
-      this.showStudentInfo(studentName, clickedID);
+      $('#group_divs').trigger('submit', {0:studentName, 1:clickedID}); // notify TAHelper that a student has been selected
+      setTimeout(() => this.showStudentInfo(studentName, clickedID), 10); // delay to receive template
     }
   }
 
@@ -268,7 +317,7 @@ class TAHelper {
     if (formLength) { // backing up from student info
       $('.student').remove();
 
-      // find currently selected group
+      // crude way of determining what the currently selected group is
       var group = $('#group_divs').find($('div'));
       for (var i of $(group)) {
         var flexType = $(i).attr("class").split(" ")[1];
@@ -300,15 +349,8 @@ class TAHelper {
   }
 
 
-  /* Turns back button visible */
-  showBackBtn() {
-    $('#backBtn').show(300);  // animated
-  }
-
-
-  /* Turns back button invisible */
-  hideBackBtn() {
-    $('#backBtn').hide();
-  }
+  /* Turns back button visible or invisible */
+  showBackBtn() { $('#backBtn').show(300); /* animated */ }
+  hideBackBtn() { $('#backBtn').hide(); }
 
 }
