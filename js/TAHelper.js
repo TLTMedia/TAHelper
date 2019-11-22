@@ -20,7 +20,6 @@ class TAHelper {
   constructor (courseInfo, taInfo) {
     this.courseInfo = courseInfo[0];
     this.taInfo = taInfo[0];
-    // console.log(this.courseInfo, this.taInfo)
   }
 
   /* Loads the initial page */
@@ -32,12 +31,12 @@ class TAHelper {
     this.taStudGroups = this.getTAStudGroups(taName);
     // this.studGroupInfo = this.getStudGroupInfo();
 
-    this.initTAGroups();
+    this.showTAGroups();
   }
 
 
   /* Creates a list of all the groups that the TA oversees */
-  initTAGroups() {
+  showTAGroups() {
     var taStudGroupsDiv = this.taGroupInfo.Group.map(i => $('<div/>', {
       id: `group-${i.id}`,
       class: `ta-group flexChildren`
@@ -46,7 +45,7 @@ class TAHelper {
       html: `Group ${i.id}`
     })));
 
-    this.addToParentDivById('group_divs' /* parent container */, taStudGroupsDiv);
+    this.addToParentById('group_divs' /* parent container */, taStudGroupsDiv);
     $('.ta-group').click(evt => this.handleClickEvent($(evt.currentTarget)));
   }
 
@@ -65,7 +64,7 @@ class TAHelper {
       html: `${i.Name.replace(/_/g, ' ')}`  // replaces all underscore with spaces
     })));
 
-    this.addToParentDivById(`group-${groupID}`, studDivs);
+    this.addToParentById(`group-${groupID}`, studDivs);
     $('.student').click(evt => this.handleClickEvent($(evt.currentTarget)));
   }
 
@@ -99,13 +98,12 @@ class TAHelper {
       }), ...this.makeFormInput(tagTypes[i.type], optionLabels[i.options], i) ]);
 
       $.each(formDivs, (i) => {
-        this.addToParentDivById(studentName, formDivs[i]);
+        this.addToParentById(studentName, formDivs[i]);
       });
 
       $(`#${studentName} input`).on('input change', (evt)=> {
         var className = $(evt.currentTarget).attr("class");
         var value = $(evt.currentTarget).val();
-        console.log(className, value)
 
         if (evt.type == 'change') {
           this.updateFormHTML(result, className, value);
@@ -172,15 +170,15 @@ class TAHelper {
   }
 
 
-  /* Adds child to parent div specified by ID */
-  addToParentDivById (divID, child) {
+  /* Adds child to Parent div specified by ID */
+  addToParentById (divID, child) {
     var id = '#' + divID;
     $(id).append(child);
   }
 
 
-  /* Adds child to parent div specified by class */
-  addToParentDivByClass (divClass, child) {
+  /* Adds child to Parent div specified by class */
+  addToParentByClass (divClass, child) {
     var className = '.' + divClass;
     $(className).append(child);
   }
@@ -190,7 +188,6 @@ class TAHelper {
   hideAndExpand (item) {
     var itemID = item.attr("id")
     var itemClass = '.' + item.attr("class").split(" ")[0];
-    // console.log(item, itemID, itemClass)
 
     this.grow(item);
     this.hide(itemClass, itemID);
@@ -209,9 +206,8 @@ class TAHelper {
 
   /* Expands the item to window size */
   grow (item) {
-    item.parent().css({ display: "block" });
+    setTimeout(() => item.parent().css({ display: "block" }), 0); // timeout fixes weird animation transition
     item.animate({ height: "100%" });
-    // item.animate( { height: "100%" }, () => { console.log("done") });
   }
 
 
@@ -238,7 +234,6 @@ class TAHelper {
   /* Handles click event when a group is selected */
   handleClickEvent (clickedItem) {
     var clickedClass = clickedItem.attr("class").split(" ")[0];
-    console.log(clickedClass)
 
     clickedItem.off(); // removes click event
     clickedItem.removeClass("flexChildren").addClass("flexContainer");
@@ -267,9 +262,28 @@ class TAHelper {
   /* Handles click event for back button */
   handleBackRequest() {
     $('#group_divs').attr("style", "");
-    $('.student').remove();
-    $('.ta-group').remove();
-    this.initTAGroups();
+
+    var formLength = document.getElementsByTagName('input').length;
+
+    if (formLength) { // backing up from student info
+      $('.student').remove();
+
+      // find currently selected group
+      var group = $('#group_divs').find($('div'));
+      for (var i of $(group)) {
+        var flexType = $(i).attr("class").split(" ")[1];
+        if (flexType == 'flexContainer') {
+          $(i).css({ display: "" });
+
+          var groupID = $(i).attr("id").substring(6, 7);
+          this.showStudentsInGroup(groupID);
+        }
+      }
+    } else {  // backing up from student groups
+      $('.ta-group').remove();
+      this.hideBackBtn();
+      this.showTAGroups();
+    }
   }
 
 
@@ -282,13 +296,19 @@ class TAHelper {
 
     $(backBtn).hide();  // initially hidden
     $(backBtn).click(evt => this.handleBackRequest());
-    this.addToParentDivById('back' /* button parent container */, backBtn);
+    this.addToParentById('back' /* button parent container */, backBtn);
   }
 
 
   /* Turns back button visible */
   showBackBtn() {
     $('#backBtn').show(300);  // animated
+  }
+
+
+  /* Turns back button invisible */
+  hideBackBtn() {
+    $('#backBtn').hide();
   }
 
 }
