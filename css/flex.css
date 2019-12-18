@@ -24,16 +24,16 @@ input[type=radio] {
 }
 
 button {
-  width: 10%;
   display: inline-block;
+  background-color: black;
+  width: auto;
   margin-top: 10px;
   margin-left: 10px;
   padding: 15px 32px;
+  color: white;
   font-size: 16px;
   text-align: center;
   text-decoration: none;
-  color: white;
-  background-color: black;
   cursor: pointer;
 }
 
