@@ -4,6 +4,7 @@ html, body {
   height: 100%;
   width: 100%;
   margin: 0px;
+  padding: 0px;
 }
 
 label {
@@ -44,6 +45,11 @@ button {
   flex-direction: row;
 }
 
+.flexContainerExpand {
+  margin: 0px;
+  padding-top: 10px;
+}
+
 .flexChildren {
   display: flex;
   flex-direction: column;
@@ -55,6 +61,18 @@ button {
   display: flex;
   flex-direction: row;
   justify-content: center;
+}
+
+.flexContainerText {
+  width: 100%;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.flexChildrenText {
+  width: 100%;
+  padding-left: 10px;
+  justify-content: left;
 }
 
 .inputText {
