@@ -6,11 +6,23 @@ class TAHelperUI {
   constructor (groupInfo, studInfo) {
     this.groupInfo = groupInfo;
     this.studInfo = studInfo;
-    console.log(this.groupInfo, this.studInfo)
+    // console.log(this.groupInfo, this.studInfo)
   }
 
-  /* Setter function */
+  /* Sets UI template */
   setTemplate (uiTemplate) { this.template = uiTemplate; }
+
+  /* Updates any data changes to UI */
+  setHTML (inputType, value) {
+    var inputElem = this.template.find(item => item.class == `${inputType}`);
+    console.log(inputElem)
+    if (inputType == 'Comments') {
+      inputElem.html = value;
+    } else {
+      inputElem.value = value;
+    }
+  }
+
 
   /* Creates a list of all the groups that the TA oversees */
   showTAGroups() {
@@ -42,7 +54,7 @@ class TAHelperUI {
     })));
 
     this.addToParentById(`group-${groupID}`, studDivs);
-    $('.student').click(evt => this.handleClickEvent($(evt.currentTarget)));
+    $('.student').on("click",evt => this.handleClickEvent($(evt.currentTarget)));
   }
 
 
@@ -79,18 +91,6 @@ class TAHelperUI {
     $.each(formDivs, (i) => {
       this.addToParentById(studentName, formDivs[i]);
     });
-  }
-
-
-  /* Updates any data changes to UI */
-  setHTML (inputType, value) {
-    var inputElem = this.template.find(item => item.class == `${inputType}`);
-
-    if (inputType == 'Comments') {
-      inputElem.html = value;
-    } else {
-      inputElem.value = value;
-    }
   }
 
 
@@ -180,8 +180,7 @@ class TAHelperUI {
       this.showStudentsInGroup(clickedID);
     } else {
       var studentName = clickedItem.attr("id");
-      $('#group_divs').trigger('submit', {0:studentName, 1:clickedID}); // notify TAHelper that a student has been selected
-      setTimeout(() => this.showStudentInfo(studentName, clickedID), 10); // delay to receive template
+      $('#group_divs').trigger('student:clicked', {0:studentName, 1:clickedID});  // notify TAHelper that a student has been selected
     }
   }
 
@@ -191,7 +190,6 @@ class TAHelperUI {
     $('#group_divs').attr("style", "");
 
     var formLength = document.getElementsByTagName('input').length;
-
     if (formLength) { // backing up from student info
       $('.student').remove();
 
