@@ -53,11 +53,18 @@ class TAHelper {
 
   /* Retrieves or intializes selected student's copy of questionnaire */
   loadStudForm (studentName, groupID) {
-    var hexID = this.model.getStudsInGroup(groupID).filter(stud => stud.Name == studentName)[0].hexID;
-    var url = `questionInfo.php?studentName=${studentName}_${hexID}`;
+    // var hexID = this.model.getStudsInGroup(groupID).filter(stud => stud.Name == studentName)[0].hexID;
+    // var url = `questionInfo.php?studentName=${studentName}_${hexID}`;
+    var url = `questionInfo.php?studentName=Group${groupID}_${studentName}`;
 
     $.getJSON(url).done(result => {
-      this.ui.setTemplate(result);  // set UI template
+      // console.log(result, result.formData)
+      if (result.formData != null) {
+        this.ui.setTemplate(result.formData); // show existing form data
+      } else {
+        this.ui.setTemplate(result);  // set UI template for new form
+      }
+      // this.ui.setTemplate(result.formData);
       this.ui.showStudentInfo(studentName, groupID);
 
       // add event listeners to UI elements

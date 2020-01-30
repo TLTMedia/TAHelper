@@ -15,7 +15,7 @@ class TAHelperUI {
   /* Updates any data changes to UI */
   setHTML (inputType, value) {
     var inputElem = this.template.find(item => item.class == `${inputType}`);
-    console.log(inputElem)
+    // console.log(inputElem)
     if (inputType == 'Comments') {
       inputElem.html = value;
     } else {
@@ -59,7 +59,7 @@ class TAHelperUI {
 
 
   /* Displays student information */
-  showStudentInfo (studentName) {
+  showStudentInfo (studentName, groupID) {
     // make sure that a UI template has been provided, otherwise return error
     if ($.type(this.template) == 'undefined') {
       console.log("Please define a UI template first")
@@ -67,26 +67,29 @@ class TAHelperUI {
     }
 
     var tagTypes = {
+      "hidden": "input",
       "radio": "input",
       "textarea": "textarea"
     };
-    var formLabels = {
-      "Attendance": "How often is this student present in class?",
-      "Focused": "How often is this student engaged in off-task behavior?",
-      "Participation": "How often does this student share their ideas, confusions, or knowledge?",
-      "Rating": "How would you rate this student?",
-      "Comments": "Comments"
-    };
-    var optionLabels = {
-      3: ["Exceptional", "Satisfactory", "Unsatisfactory"],
-      4: ["Often", "Occasionally", "Rarely", "Not sure"]
-    };
+
+    // var formLabels = {
+    //   "Group": `Group ${groupID}`,
+    //   "Attendance": "How often is this student present in class?",
+    //   "Focused": "How often is this student engaged in off-task behavior?",
+    //   "Participation": "How often does this student share their ideas, confusions, or knowledge?",
+    //   "Rating": "How would you rate this student?",
+    //   "Comments": "Comments"
+    // };
+    // var optionLabels = {
+    //   3: ["Exceptional", "Satisfactory", "Unsatisfactory"],
+    //   4: ["Often", "Occasionally", "Rarely", "Not sure"]
+    // };
 
     var formDivs = this.template.map(i => [ $('<label/>', {
       class: `${i.class}-label`,
       for: `${i.class}`,
-      html: `${formLabels[i.class]}`,
-    }), ...this.makeFormInput(tagTypes[i.type], optionLabels[i.options], i) ]);
+      html: `${i.label}`,
+    }), ...this.makeFormInput(tagTypes[i.type], i.options, i) ]);
 
     $.each(formDivs, (i) => {
       this.addToParentById(studentName, formDivs[i]);
@@ -138,21 +141,45 @@ class TAHelperUI {
 
   /* Constructs and returns a DOM element with the given tag, options, and any other data necessary */
   makeFormInput (tag, options, data) {
-    if (data.type == 'radio') {
-      return options.map(option => $('<input>', {
-          class: `${data.class}`,
-          name: `${data.class}`,
-          type: `radio`,
-          checked: (option == data.value),
-          value: `${option}`
-        }).add($('<text/>', {
-          class: `inputText`,
-          html: `${option}`
-        }))
-      );
-    } else {
-      return $(`<${tag}>`, data);
+    // console.log(options)
+    switch (data.type) {
+      case 'radio':
+        return options.map(option => $('<input>', {
+            class: `${data.class}`,
+            name: `${data.class}`,
+            type: `radio`,
+            checked: (option == data.value),
+            value: `${option}`
+          }).add($('<text/>', {
+            class: `inputText`,
+            html: `${option}`
+          }))
+        );
+        break;
+      case 'textarea':
+        return $(`<${tag}>`, data).css("height", "100px");
+        break;
+      default:
+        return $(`<${tag}>`, data);
     }
+
+    // if (data.type == 'radio') {
+    //   return options.map(option => $('<input>', {
+    //       class: `${data.class}`,
+    //       name: `${data.class}`,
+    //       type: `radio`,
+    //       checked: (option == data.value),
+    //       value: `${option}`
+    //     }).add($('<text/>', {
+    //       class: `inputText`,
+    //       html: `${option}`
+    //     }))
+    //   );
+    // } else if (data.type == 'textarea') {
+    //   return $(`<${tag}>`, data).css("height", "100px");
+    // } else {
+    //   return $(`<${tag}>`, data);
+    // }
   }
 
 
