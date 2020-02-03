@@ -72,19 +72,6 @@ class TAHelperUI {
       "textarea": "textarea"
     };
 
-    // var formLabels = {
-    //   "Group": `Group ${groupID}`,
-    //   "Attendance": "How often is this student present in class?",
-    //   "Focused": "How often is this student engaged in off-task behavior?",
-    //   "Participation": "How often does this student share their ideas, confusions, or knowledge?",
-    //   "Rating": "How would you rate this student?",
-    //   "Comments": "Comments"
-    // };
-    // var optionLabels = {
-    //   3: ["Exceptional", "Satisfactory", "Unsatisfactory"],
-    //   4: ["Often", "Occasionally", "Rarely", "Not sure"]
-    // };
-
     var formDivs = this.template.map(i => [ $('<label/>', {
       class: `${i.class}-label`,
       for: `${i.class}`,
@@ -162,24 +149,6 @@ class TAHelperUI {
       default:
         return $(`<${tag}>`, data);
     }
-
-    // if (data.type == 'radio') {
-    //   return options.map(option => $('<input>', {
-    //       class: `${data.class}`,
-    //       name: `${data.class}`,
-    //       type: `radio`,
-    //       checked: (option == data.value),
-    //       value: `${option}`
-    //     }).add($('<text/>', {
-    //       class: `inputText`,
-    //       html: `${option}`
-    //     }))
-    //   );
-    // } else if (data.type == 'textarea') {
-    //   return $(`<${tag}>`, data).css("height", "100px");
-    // } else {
-    //   return $(`<${tag}>`, data);
-    // }
   }
 
 
@@ -207,7 +176,7 @@ class TAHelperUI {
       this.showStudentsInGroup(clickedID);
     } else {
       var studentName = clickedItem.attr("id");
-      $('#group_divs').trigger('student:clicked', {0:studentName, 1:clickedID});  // notify TAHelper that a student has been selected
+      $('#menu').trigger('student:clicked', {0:studentName, 1:clickedID});  // notify TAHelper that a student has been selected
     }
   }
 
@@ -248,12 +217,35 @@ class TAHelperUI {
 
     $(backBtn).hide();  // initially hidden
     $(backBtn).click(evt => this.handleBackRequest());
-    this.addToParentById('back' /* button parent container */, backBtn);
+    this.addToParentById('menu' /* parent container */, backBtn);
   }
 
 
   /* Turns back button visible or invisible */
   showBackBtn() { $('#backBtn').show(300); /* animated */ }
   hideBackBtn() { $('#backBtn').hide(); }
+
+
+  /* Handles click event for download button */
+  handleDownloadRequest() {
+    $('#menu').trigger('request:download');
+  }
+
+
+  /* Adds a download button to the top of the page */
+  addDownloadBtn() {
+    var downloadBtn = $('<button/>', {
+      id: 'downloadBtn',
+      html: 'Download CSV file'
+    });
+
+    $(downloadBtn).click(evt => this.handleDownloadRequest());
+    this.addToParentById('menu' /* parent container */, downloadBtn);
+  }
+
+
+  /* Turns download button visible or invisible */
+  showDownloadBtn() { $('#downloadBtn').show(300); /* animated */ }
+  hideDownloadBtn() { $('#downloadBtn').hide(); }
 
 }

@@ -6,8 +6,8 @@ $(init);
 var taHelper;
 
 function init() {
-  var courseInfo = $.get("../json/dataDev.json");    // replace with file location with for student and TA data
-  var taInfo = $.get("./iam.php");   // replace with file location for PHP permissions
+  var courseInfo = $.get(/* pathname */);    // replace with file location for course info
+  var taInfo = $.get(/* pathname */);   // replace with file location for PHP permissions
 
   $.when(courseInfo, taInfo).done((courseInfo, taInfo) => {
     taHelper = new TAHelper(courseInfo, taInfo);
@@ -42,10 +42,16 @@ class TAHelper {
 
       this.ui.showTAGroups();
       this.ui.addBackBtn();
+      this.ui.addDownloadBtn();
 
       // install an event listener to be triggered when a student has been selected
-      $('#group_divs').on('student:clicked', (evt, studInfo) => {
+      $('#menu').on('student:clicked', (evt, studInfo) => {
         this.loadStudForm(studInfo[0], studInfo[1]);
+      });
+
+      // install an event listener to be triggered when a download request is made
+      $('#menu').on('request:download', evt => {
+        this.downloadCSV();
       });
     });
   }
@@ -53,9 +59,7 @@ class TAHelper {
 
   /* Retrieves or intializes selected student's copy of questionnaire */
   loadStudForm (studentName, groupID) {
-    // var hexID = this.model.getStudsInGroup(groupID).filter(stud => stud.Name == studentName)[0].hexID;
-    // var url = `questionInfo.php?studentName=${studentName}_${hexID}`;
-    var url = `questionInfo.php?studentName=Group${groupID}_${studentName}`;
+    var url = `questionInfo.php?studentInfo=Group${groupID}_${studentName}`;
 
     $.getJSON(url).done(result => {
       // console.log(result, result.formData)
@@ -84,6 +88,21 @@ class TAHelper {
         this.updateUI(className, value);
         this.sendQuestionnaire(url, result);
       });
+    });
+  }
+
+
+  /* Organizes and exports filled out student forms to a CSV file */
+  downloadCSV() {
+    var url = `studentInfo.php`;
+
+    $.get(url).done(result => {
+      // console.log(result)
+      var hiddenElement = document.createElement('a');
+      hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(result);
+      hiddenElement.target = '_blank';
+      hiddenElement.download = 'Student Evaluations.csv';
+      hiddenElement.click();
     });
   }
 

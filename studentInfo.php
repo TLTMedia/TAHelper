@@ -26,8 +26,18 @@ foreach (glob("studentInfo/*") as $pathname) {
     // echo "$pathname size " . filesize($pathname) . "\n";
 
     list($dir, $filename) = explode("/", $pathname);
+
     $replace = array(".json", "Group");
-    list($group_id, $first_name, $last_name) = str_replace($replace, "", explode("_", $filename)); // todo: some students have a middle name
+    $stud_info = str_replace($replace, "", explode("_", $filename));
+
+    // for students with two first names
+    if (count($stud_info) == 4) {
+      list($group_id, $fn1, $fn2, $last_name) = $stud_info;
+      $first_name = $fn1 . " " . $fn2;
+    } else {
+      list($group_id, $first_name, $last_name) = $stud_info;
+    }
+
     $stud_array = array($last_name, $first_name, $group_id);
     // print_r(implode(',', $stud_array));
 
@@ -35,7 +45,6 @@ foreach (glob("studentInfo/*") as $pathname) {
     $json_data = json_decode($raw_data);
     // print_r($json_data);
 
-    // initial scan for form elements
     foreach ($json_data->formData as $form_elem) {
       // print_r($form_elem);
       $input_type = $form_elem->type;

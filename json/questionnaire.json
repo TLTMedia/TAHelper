@@ -24,7 +24,7 @@
   "value": ""
 }, {
   "class": "Comments",
-  "label": "Comments",
   "type": "textarea",
+  "label": "Comments",
   "value": ""
 }]
