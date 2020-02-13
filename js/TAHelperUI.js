@@ -113,7 +113,7 @@ class TAHelperUI {
   hide (className, skipID) {
     for (var i of $(className)) {
       if ($(i).attr("id") != skipID) {
-        $(i).hide(300); // animated
+        $(i).hide(150); // animated
       }
     }
   }
@@ -170,7 +170,7 @@ class TAHelperUI {
       clickedText.addClass("flexChildrenText");
     }
 
-    var clickedID = (clickedClass == 'ta-group') ? clickedItem.attr("id").slice(6, 7) : clickedItem.attr("class").split(" ")[1].slice(6, 7);
+    var clickedID = (clickedClass == 'ta-group') ? clickedItem.attr("id").split("-")[1] : clickedItem.attr("class").split(" ")[1].split("-")[1];
     this.hideAndExpand(clickedItem);
     if (clickedClass == 'ta-group') {
       this.showStudentsInGroup(clickedID);
@@ -196,7 +196,7 @@ class TAHelperUI {
         if (flexType == 'flexContainer') {
           $(i).css({ display: "" });
 
-          var groupID = $(i).attr("id").substring(6, 7);
+          var groupID = $(i).attr("id").split("-")[1];
           this.showStudentsInGroup(groupID);
         }
       }
