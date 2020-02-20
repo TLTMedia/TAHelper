@@ -1,10 +1,6 @@
 # ignore hidden files
 .DS_Store
-._iam.php
-._index.html
-._questionInfo.php
-# ignore other files
 ._*
-iam.php
 json/.*
-# ignore directories
+# ignore other files
+iam.php
