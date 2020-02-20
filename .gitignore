@@ -1,6 +1,6 @@
 # ignore hidden files
 .DS_Store
+.htaccess
 ._*
-json/.*
 # ignore other files
 iam.php
