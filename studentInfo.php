@@ -11,6 +11,10 @@ $form_data = file_get_contents($filename);
 $decoded_formdata = json_decode($form_data);
 // print_r($decoded_formdata);
 
+$group_data = $_POST['groups'];
+$group_filter = implode(",", $group_data);
+// print_r($group_data);
+
 foreach ($decoded_formdata as $form_elem) {
   // print_r($form_elem);
   $question = $form_elem->class;
@@ -22,7 +26,7 @@ foreach ($decoded_formdata as $form_elem) {
 // echo '<br/>';
 fputcsv($outfile, $header);
 
-foreach (glob("studentInfo/*") as $pathname) {
+foreach (glob("studentInfo/Group{" . $group_filter . "}*", GLOB_BRACE) as $pathname) {
     // echo "$pathname size " . filesize($pathname) . "\n";
 
     list($dir, $filename) = explode("/", $pathname);

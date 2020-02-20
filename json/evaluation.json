@@ -1,0 +1,37 @@
+[{
+  "class": "GroupAttendance",
+  "type": "radio",
+  "label": "Does this group have three or more students present in class at a given time?",
+  "options": ["Often", "Occasionally", "Rarely", "Not sure"],
+  "value": ""
+}, {
+  "class": "Teamwork",
+  "type": "radio",
+  "label": "Does every member of this group work together during group activities?",
+  "options": ["Often", "Occasionally", "Rarely", "Not sure"],
+  "value": ""
+}, {
+  "class": "Subgroups",
+  "type": "radio",
+  "label": "If not, does the group have a 2x2 or 3x1 or 2x1 dynamic in which they have broken themselves down into sub groups?",
+  "options": ["Often", "Occasionally", "Rarely", "Not sure"],
+  "value": ""
+}, {
+  "class": "NameTags",
+  "type": "radio",
+  "label": "Do most members bring their name tags?",
+  "options": ["Exceptional", "Satisfactory", "Unsatisfactory"],
+  "value": ""
+}, {
+  "class": "Discussion",
+  "type": "radio",
+  "label": "Does one member of the group dominate the discussion?",
+  "options": ["Exceptional", "Satisfactory", "Unsatisfactory"],
+  "value": ""
+}, {
+  "class": "Comments",
+  "type": "textarea",
+  "label": "Comments",
+  "value": "",
+  "html": ""
+}]

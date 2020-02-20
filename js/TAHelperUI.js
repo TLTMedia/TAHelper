@@ -6,7 +6,7 @@ class TAHelperUI {
   constructor (groupInfo, studInfo) {
     this.groupInfo = groupInfo;
     this.studInfo = studInfo;
-    // console.log(this.groupInfo, this.studInfo)
+    console.log(this.groupInfo, this.studInfo)
   }
 
   /* Sets UI template */
@@ -42,6 +42,7 @@ class TAHelperUI {
   /* Displays a list of students in the group */
   showStudentsInGroup (groupID) {
     this.showBackBtn();
+    this.showEvalBtn();
 
     var studGroups = this.studInfo.filter(i => i[0].Group == groupID)[0];
     var studDivs = studGroups.map(i => $('<div/>', {
@@ -58,7 +59,7 @@ class TAHelperUI {
   }
 
 
-  /* Displays student information */
+  /* Displays student questionnaire questions and responses */
   showStudentInfo (studentName, groupID) {
     // make sure that a UI template has been provided, otherwise return error
     if ($.type(this.template) == 'undefined') {
@@ -82,6 +83,26 @@ class TAHelperUI {
       this.addToParentById(studentName, formDivs[i]);
     });
   }
+
+
+  // /* Displays group evaluation questions and responses */
+  // showGroupEval (groupID) {
+  //   var tagTypes = {
+  //     "hidden": "input",
+  //     "radio": "input",
+  //     "textarea": "textarea"
+  //   };
+  //
+  //   var formDivs = this.template.map(i => [ $('<label/>', {
+  //     class: `${i.class}-label`,
+  //     for: `${i.class}`,
+  //     html: `${i.label}`,
+  //   }), ...this.makeFormInput(tagTypes[i.type], i.options, i) ]);
+  //
+  //   $.each(formDivs, (i) => {
+  //     this.addToParentById(studentName, formDivs[i]);
+  //   });
+  // }
 
 
   /* Adds child to Parent div specified by ID */
@@ -203,6 +224,7 @@ class TAHelperUI {
     } else {  // backing up from student groups
       $('.ta-group').remove();
       this.hideBackBtn();
+      this.hideEvalBtn();
       this.showTAGroups();
     }
   }
@@ -228,7 +250,7 @@ class TAHelperUI {
 
   /* Handles click event for download button */
   handleDownloadRequest() {
-    $('#menu').trigger('request:download');
+    $('#menu').trigger('request:download', this.groupInfo);
   }
 
 
@@ -247,5 +269,27 @@ class TAHelperUI {
   /* Turns download button visible or invisible */
   showDownloadBtn() { $('#downloadBtn').show(300); /* animated */ }
   hideDownloadBtn() { $('#downloadBtn').hide(); }
+
+
+  /* Add a group evaluation button to the top of the page */
+  addEvalBtn() {
+    var evalBtn = $('<button/>', {
+      id: 'evalBtn',
+      html: 'Group Evaluations'
+    });
+
+    $(evalBtn).hide();  // initially hidden
+    $(evalBtn).click(evt => this.handleEvaluationRequest());
+    this.addToParentById('menu' /* parent container */, evalBtn);
+  }
+
+  /* Turns evaluation button visible or invisible */
+  showEvalBtn() { $('#evalBtn').show(300); /* animated */ }
+  hideEvalBtn() { $('#evalBtn').hide(); }
+
+  /*  */
+  handleEvaluationRequest() {
+    console.log("show group evaluations");
+  }
 
 }

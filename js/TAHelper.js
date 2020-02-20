@@ -6,8 +6,8 @@ $(init);
 var taHelper;
 
 function init() {
-  var courseInfo = $.get(/* pathname */);    // replace with file location for course info
-  var taInfo = $.get(/* pathname */);   // replace with file location for PHP permissions
+  var courseInfo = $.get("../json/dataDev.json");    // replace with file location with for student and TA data
+  var taInfo = $.get("./iam.php");   // replace with file location for PHP permissions
 
   $.when(courseInfo, taInfo).done((courseInfo, taInfo) => {
     taHelper = new TAHelper(courseInfo, taInfo);
@@ -21,7 +21,7 @@ class TAHelper {
   constructor (courseInfo, taInfo) {
     this.courseInfo = courseInfo;
     this.taInfo = taInfo;
-    // console.log(this.courseInfo, this.taInfo)
+    console.log(this.courseInfo, this.taInfo)
   }
 
 
@@ -42,6 +42,7 @@ class TAHelper {
 
       this.ui.showTAGroups();
       this.ui.addBackBtn();
+      this.ui.addEvalBtn();
       this.ui.addDownloadBtn();
 
       // install an event listener to be triggered when a student has been selected
@@ -50,8 +51,9 @@ class TAHelper {
       });
 
       // install an event listener to be triggered when a download request is made
-      $('#menu').on('request:download', evt => {
-        this.downloadCSV();
+      $('#menu').on('request:download', (evt, groupInfo) => {
+        // console.log(groupInfo.Group)
+        this.downloadCSV(groupInfo.Group);
       });
     });
   }
@@ -93,10 +95,15 @@ class TAHelper {
 
 
   /* Organizes and exports filled out student forms to a CSV file */
-  downloadCSV() {
+  downloadCSV (groupInfo) {
     var url = `studentInfo.php`;
+    var taGroups = [];
+    $.each(groupInfo, function(i) {
+      var groupID = groupInfo[i].id;
+      taGroups.push(groupID);
+    })
 
-    $.get(url).done(result => {
+    $.post(url, {groups: taGroups}).done(result => {
       // console.log(result)
       var hiddenElement = document.createElement('a');
       hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(result);

@@ -27,10 +27,10 @@ if (!isset($_POST["data"])) { /* GET request */
   $studentData->lastname = $last_name;
   $studentData->groupid = $group_id;
 
-  $encoded_data = json_decode("{}");
-  $encoded_data->studentData = $studentData;
-  $encoded_data->formData = $_POST['data'];
-  file_put_contents($file, json_encode($encoded_data));
-  print(json_encode($encoded_data));
+  $decoded_data = json_decode("{}");
+  $decoded_data->studentData = $studentData;
+  $decoded_data->formData = $_POST['data'];
+  file_put_contents($file, json_encode($decoded_data));
+  print(json_encode($decoded_data));
 }
 ?>
