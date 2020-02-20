@@ -21,7 +21,7 @@ class TAHelper {
   constructor (courseInfo, taInfo) {
     this.courseInfo = courseInfo;
     this.taInfo = taInfo;
-    console.log(this.courseInfo, this.taInfo)
+    // console.log(this.courseInfo, this.taInfo)
   }
 
 
@@ -50,6 +50,11 @@ class TAHelper {
         this.loadStudForm(studInfo[0], studInfo[1]);
       });
 
+      // install an event listener to be triggered when group evaluations button is selected
+      $('#menu').on('select:evaluations', (evt, groupID) => {
+        this.loadEvalForm(groupID);
+      });
+
       // install an event listener to be triggered when a download request is made
       $('#menu').on('request:download', (evt, groupInfo) => {
         // console.log(groupInfo.Group)
@@ -66,11 +71,11 @@ class TAHelper {
     $.getJSON(url).done(result => {
       // console.log(result, result.formData)
       if (result.formData != null) {
-        this.ui.setTemplate(result.formData); // show existing form data
+        this.ui.setQuesTemplate(result.formData); // show existing form data
       } else {
-        this.ui.setTemplate(result);  // set UI template for new form
+        this.ui.setQuesTemplate(result);  // set UI template for new form
       }
-      // this.ui.setTemplate(result.formData);
+      // this.ui.setQuesTemplate(result.formData);
       this.ui.showStudentInfo(studentName, groupID);
 
       // add event listeners to UI elements
@@ -79,15 +84,47 @@ class TAHelper {
         var value = $(evt.currentTarget).val();
 
         if (evt.type == 'change') {
-          this.updateUI(className, value);
+          this.updateQuesUI(className, value);
           this.sendQuestionnaire(url, result);
         }
-      })
+      });
 
       $(`#${studentName} textarea`).on('change blur', (evt)=> {
         var className = $(evt.currentTarget).attr("class");
         var value = $(evt.currentTarget).val();
-        this.updateUI(className, value);
+        this.updateQuesUI(className, value);
+        this.sendQuestionnaire(url, result);
+      });
+    });
+  }
+
+
+  /* Retrieves or initializes group evaluation form */
+  loadEvalForm (groupID) {
+    var url = `evaluationInfo.php?groupInfo=Group_${groupID}`;
+
+    $.getJSON(url).done(result => {
+      console.log(result);
+
+      // set UI template for evaluation form
+      this.ui.setEvalTemplate(result);
+      this.ui.showGroupEval(groupID);
+
+      // add event listeners to UI elements
+      $('#group-evaluations input').on('input change', (evt)=> {
+        var className = $(evt.currentTarget).attr("class");
+        var value = $(evt.currentTarget).val();
+
+        if (evt.type == 'change') {
+          this.updateEvalUI(className, value);
+          this.sendQuestionnaire(url, result);
+        }
+      });
+
+      $('#group-evaluations textarea').on('change blur', (evt)=> {
+        var className = $(evt.currentTarget).attr("class");
+        var value = $(evt.currentTarget).val();
+        this.updateEvalUI(className, value);
         this.sendQuestionnaire(url, result);
       });
     });
@@ -114,12 +151,22 @@ class TAHelper {
   }
 
 
-  /* Update the form UI to correctly reflect changes to data */
+  /* Update the questionnaire form UI to correctly reflect changes to data */
   updateUI (question, val) {
     if (question == 'Comments') {
-      this.ui.setHTML(question, val);
+      this.ui.setQuesHTML(question, val);
     } else {
-      this.ui.setHTML(question.split('-')[0], val);
+      this.ui.setQuesHTML(question.split('-')[0], val);
+    }
+  }
+
+
+  /* Update the evaluation form UI to correctly reflect changes to data */
+  updateEvalUI (question, val) {
+    if (question == 'Comments') {
+      this.ui.setEvalHTML(question, val);
+    } else {
+      this.ui.setEvalHTML(question.split('-')[0], val);
     }
   }
 

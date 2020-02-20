@@ -6,15 +6,28 @@ class TAHelperUI {
   constructor (groupInfo, studInfo) {
     this.groupInfo = groupInfo;
     this.studInfo = studInfo;
-    console.log(this.groupInfo, this.studInfo)
+    // console.log(this.groupInfo, this.studInfo)
   }
 
   /* Sets UI template */
-  setTemplate (uiTemplate) { this.template = uiTemplate; }
+  setQuesTemplate (uiTemplate) { this.questionTemplate = uiTemplate; }
+  setEvalTemplate (uiTemplate) { this.evaluationTemplate = uiTemplate; }
 
-  /* Updates any data changes to UI */
-  setHTML (inputType, value) {
-    var inputElem = this.template.find(item => item.class == `${inputType}`);
+  /* Updates any data changes to questionnaire form */
+  setQuesHTML (inputType, value) {
+    var inputElem = this.questionTemplate.find(item => item.class == `${inputType}`);
+    // console.log(inputElem)
+    if (inputType == 'Comments') {
+      inputElem.html = value;
+    } else {
+      inputElem.value = value;
+    }
+  }
+
+
+  /* Updates any data changes to evaluation form */
+  setEvalHTML (inputType, value) {
+    var inputElem = this.evaluationTemplate.find(item => item.class == `${inputType}`);
     // console.log(inputElem)
     if (inputType == 'Comments') {
       inputElem.html = value;
@@ -62,22 +75,16 @@ class TAHelperUI {
   /* Displays student questionnaire questions and responses */
   showStudentInfo (studentName, groupID) {
     // make sure that a UI template has been provided, otherwise return error
-    if ($.type(this.template) == 'undefined') {
+    if ($.type(this.questionTemplate) == 'undefined') {
       console.log("Please define a UI template first")
       return;
     }
 
-    var tagTypes = {
-      "hidden": "input",
-      "radio": "input",
-      "textarea": "textarea"
-    };
-
-    var formDivs = this.template.map(i => [ $('<label/>', {
+    var formDivs = this.questionTemplate.map(i => [ $('<label/>', {
       class: `${i.class}-label`,
       for: `${i.class}`,
       html: `${i.label}`,
-    }), ...this.makeFormInput(tagTypes[i.type], i.options, i) ]);
+    }), ...this.makeFormInput(i.type, i.options, i) ]);
 
     $.each(formDivs, (i) => {
       this.addToParentById(studentName, formDivs[i]);
@@ -85,24 +92,35 @@ class TAHelperUI {
   }
 
 
-  // /* Displays group evaluation questions and responses */
-  // showGroupEval (groupID) {
-  //   var tagTypes = {
-  //     "hidden": "input",
-  //     "radio": "input",
-  //     "textarea": "textarea"
-  //   };
-  //
-  //   var formDivs = this.template.map(i => [ $('<label/>', {
-  //     class: `${i.class}-label`,
-  //     for: `${i.class}`,
-  //     html: `${i.label}`,
-  //   }), ...this.makeFormInput(tagTypes[i.type], i.options, i) ]);
-  //
-  //   $.each(formDivs, (i) => {
-  //     this.addToParentById(studentName, formDivs[i]);
-  //   });
-  // }
+  /* Displays group evaluation questions and responses */
+  showGroupEval (groupID) {
+    // make sure that a UI template has been provided, otherwise return error
+    if ($.type(this.evaluationTemplate) == 'undefined') {
+      console.log("Please define a UI template first")
+      return;
+    }
+
+    var evalDiv = $('<div/>', {
+      id: `group-evaluations`,
+      class: `student flexContainer`
+    }).append($('<div/>', {
+      class: `flexText flexChildrenText`,
+      html: `Group Evaluation`  // replaces all underscore with spaces
+    }));
+
+    this.addToParentById(`group-${groupID}`, evalDiv);
+    $('#group-evaluations').css({ margin: "0px", "padding-top": "10px" }); // override inherited css
+
+    var formDivs = this.evaluationTemplate.map(i => [ $('<label/>', {
+      class: `${i.class}-label`,
+      for: `${i.class}`,
+      html: `${i.label}`,
+    }), ...this.makeFormInput(i.type, i.options, i) ]);
+
+    $.each(formDivs, (i) => {
+      this.addToParentById('group-evaluations', formDivs[i]);
+    });
+  }
 
 
   /* Adds child to Parent div specified by ID */
@@ -149,7 +167,13 @@ class TAHelperUI {
 
   /* Constructs and returns a DOM element with the given tag, options, and any other data necessary */
   makeFormInput (tag, options, data) {
-    // console.log(options)
+    // console.log(tag)
+    var tagTypes = {
+      "hidden": "input",
+      "radio": "input",
+      "textarea": "textarea"
+    };
+
     switch (data.type) {
       case 'radio':
         return options.map(option => $('<input>', {
@@ -165,10 +189,10 @@ class TAHelperUI {
         );
         break;
       case 'textarea':
-        return $(`<${tag}>`, data).css("height", "100px");
+        return $(`<${tagTypes[tag]}>`, data).css("height", "100px");
         break;
       default:
-        return $(`<${tag}>`, data);
+        return $(`<${tagTypes[tag]}>`, data);
     }
   }
 
@@ -275,7 +299,7 @@ class TAHelperUI {
   addEvalBtn() {
     var evalBtn = $('<button/>', {
       id: 'evalBtn',
-      html: 'Group Evaluations'
+      html: 'Group Evaluation'
     });
 
     $(evalBtn).hide();  // initially hidden
@@ -283,13 +307,30 @@ class TAHelperUI {
     this.addToParentById('menu' /* parent container */, evalBtn);
   }
 
+
   /* Turns evaluation button visible or invisible */
   showEvalBtn() { $('#evalBtn').show(300); /* animated */ }
   hideEvalBtn() { $('#evalBtn').hide(); }
 
-  /*  */
+
+  /* Handles click event for evaluation button */
   handleEvaluationRequest() {
-    console.log("show group evaluations");
+    // console.log("show group evaluations");
+    $('.student').remove();
+
+    // crude way of determining what the currently selected group is
+    var group = $('#group_divs').find($('div'));
+    for (var i of $(group)) {
+      var flexType = $(i).attr("class").split(" ")[1];
+      if (flexType == 'flexContainer') {
+        $(i).css({ display: "" });
+
+        var groupID = $(i).attr("id").split("-")[1];
+        console.log(groupID)
+      }
+    }
+
+    $('#menu').trigger('select:evaluations', groupID);
   }
 
 }
