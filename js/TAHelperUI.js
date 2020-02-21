@@ -221,7 +221,7 @@ class TAHelperUI {
       this.showStudentsInGroup(clickedID);
     } else {
       var studentName = clickedItem.attr("id");
-      $('#menu').trigger('student:clicked', {0:studentName, 1:clickedID});  // notify TAHelper that a student has been selected
+      $('#group_divs').trigger('student:clicked', {0:studentName, 1:clickedID});  // notify TAHelper that a student has been selected
     }
   }
 
@@ -248,75 +248,16 @@ class TAHelperUI {
     } else {  // backing up from student groups
       $('.ta-group').remove();
       this.hideBackBtn();
-      this.hideEvalBtn();
       this.showTAGroups();
     }
   }
 
 
-  /* Adds a back button to the top of the page */
-  addBackBtn() {
-    var backBtn = $('<button/>', {
-      id: 'backBtn',
-      html: 'Back'
-    });
-
-    $(backBtn).hide();  // initially hidden
-    $(backBtn).click(evt => this.handleBackRequest());
-    this.addToParentById('menu' /* parent container */, backBtn);
-  }
-
-
-  /* Turns back button visible or invisible */
-  showBackBtn() { $('#backBtn').show(300); /* animated */ }
-  hideBackBtn() { $('#backBtn').hide(); }
-
-
-  /* Handles click event for download button */
-  handleDownloadRequest() {
-    $('#menu').trigger('request:download', this.groupInfo);
-  }
-
-
-  /* Adds a download button to the top of the page */
-  addDownloadBtn() {
-    var downloadBtn = $('<button/>', {
-      id: 'downloadBtn',
-      html: 'Download CSV file'
-    });
-
-    $(downloadBtn).click(evt => this.handleDownloadRequest());
-    this.addToParentById('menu' /* parent container */, downloadBtn);
-  }
-
-
-  /* Turns download button visible or invisible */
-  showDownloadBtn() { $('#downloadBtn').show(300); /* animated */ }
-  hideDownloadBtn() { $('#downloadBtn').hide(); }
-
-
-  /* Add a group evaluation button to the top of the page */
-  addEvalBtn() {
-    var evalBtn = $('<button/>', {
-      id: 'evalBtn',
-      html: 'Group Evaluation'
-    });
-
-    $(evalBtn).hide();  // initially hidden
-    $(evalBtn).click(evt => this.handleEvaluationRequest());
-    this.addToParentById('menu' /* parent container */, evalBtn);
-  }
-
-
-  /* Turns evaluation button visible or invisible */
-  showEvalBtn() { $('#evalBtn').show(300); /* animated */ }
-  hideEvalBtn() { $('#evalBtn').hide(); }
-
-
   /* Handles click event for evaluation button */
   handleEvaluationRequest() {
-    // console.log("show group evaluations");
-    $('.student').remove();
+    // $('#evalBtn').attr("disabled", true); // prevents request from being sent multiple times
+    $('.student').hide(100);  // animated
+    // $('.student').remove();
 
     // crude way of determining what the currently selected group is
     var group = $('#group_divs').find($('div'));
@@ -330,7 +271,70 @@ class TAHelperUI {
       }
     }
 
-    $('#menu').trigger('select:evaluations', groupID);
+    $('#right_menu').trigger('select:evaluations', groupID);
+  }
+
+
+  /* Handles click event for download button */
+  handleDownloadRequest() {
+    $('#right_menu').trigger('request:download', this.groupInfo);
+  }
+
+
+  /* Turns back button visible or invisible */
+  showBackBtn() { $('#backBtn').show(100); /* animated */ }
+  hideBackBtn() { $('#backBtn').hide(); }
+
+
+  /* Turns evaluation button visible or invisible */
+  showEvalBtn() { $('#evalBtn').show(); }
+  hideEvalBtn() { $('#evalBtn').hide(); }
+
+
+  /* Turns download button visible or invisible */
+  showDownloadBtn() { $('#downloadBtn').show(300); /* animated */ }
+  hideDownloadBtn() { $('#downloadBtn').hide(); }
+
+
+  /* Adds a back button to the top of the page */
+  addBackBtn() {
+    var backBtn = $('<button/>', {
+      id: 'backBtn',
+      html: 'Back'
+    });
+
+    $(backBtn).hide();  // initially hidden
+    $(backBtn).click(evt => this.handleBackRequest());
+    this.addToParentById('left_menu' /* parent container */, backBtn);
+  }
+
+
+  /* Adds a dropdown menu to the page */
+  addDropdownMenu() {
+    var dropdownBtn = $('<button/>', {
+      id: 'dropdownBtn',
+      html: 'Menu'
+    });
+    var dropdownMenu = $('<div/>', {
+      id: 'dropdownMenu',
+      class: 'dropdown-content'
+    })
+    var evalBtn = $('<button/>', {
+      id: 'evalBtn',
+      html: 'Group Evaluation',
+    });
+    var downloadBtn = $('<button/>', {
+      id: 'downloadBtn',
+      html: 'Download Responses',
+    });
+
+    $(evalBtn).hide();  // initially hidden
+    $(evalBtn).click(evt => this.handleEvaluationRequest());
+    $(downloadBtn).click(evt => this.handleDownloadRequest());
+
+    dropdownMenu.append(evalBtn, downloadBtn);
+    this.addToParentById('right_menu' /* parent container */, dropdownBtn);
+    this.addToParentById('right_menu' /* parent container */, dropdownMenu);
   }
 
 }

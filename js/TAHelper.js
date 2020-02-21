@@ -42,21 +42,22 @@ class TAHelper {
 
       this.ui.showTAGroups();
       this.ui.addBackBtn();
-      this.ui.addEvalBtn();
-      this.ui.addDownloadBtn();
+      this.ui.addDropdownMenu();
+      // this.ui.addEvalBtn();
+      // this.ui.addDownloadBtn();
 
       // install an event listener to be triggered when a student has been selected
-      $('#menu').on('student:clicked', (evt, studInfo) => {
+      $('#group_divs').on('student:clicked', (evt, studInfo) => {
         this.loadStudForm(studInfo[0], studInfo[1]);
       });
 
       // install an event listener to be triggered when group evaluations button is selected
-      $('#menu').on('select:evaluations', (evt, groupID) => {
+      $('#right_menu').on('select:evaluations', (evt, groupID) => {
         this.loadEvalForm(groupID);
       });
 
       // install an event listener to be triggered when a download request is made
-      $('#menu').on('request:download', (evt, groupInfo) => {
+      $('#right_menu').on('request:download', (evt, groupInfo) => {
         // console.log(groupInfo.Group)
         this.downloadCSV(groupInfo.Group);
       });
