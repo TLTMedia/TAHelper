@@ -118,7 +118,9 @@ class TAHelperUI {
     }), ...this.makeFormInput(i.type, i.options, i) ]);
 
     $.each(formDivs, (i) => {
+      $('#group-evaluations').hide(); // for animation
       this.addToParentById('group-evaluations', formDivs[i]);
+      $('#group-evaluations').slideDown(300); // animated
     });
   }
 
@@ -143,25 +145,15 @@ class TAHelperUI {
     var itemClass = '.' + item.attr("class").split(" ")[0];
     // console.log(item, itemID, itemClass)
 
-    this.grow(item);
-    this.hide(itemClass, itemID);
-  }
+    item.parent().animate({ display: "block" });
+    item.animate({ height: "100%" });
 
-
-  /* Hides all items in a class, except the one with the given id */
-  hide (className, skipID) {
-    for (var i of $(className)) {
-      if ($(i).attr("id") != skipID) {
-        $(i).hide(150); // animated
+    // hide all other items with the same class
+    for (var i of $(itemClass)) {
+      if ($(i).attr("id") != itemID) {
+        $(i).hide('fast'); // animated
       }
     }
-  }
-
-
-  /* Expands the item to window size */
-  grow (item) {
-    setTimeout(() => item.parent().css({ display: "block" }), 0); // timeout fixes weird animation transition
-    item.animate({ height: "100%" });
   }
 
 
@@ -229,6 +221,7 @@ class TAHelperUI {
   /* Handles click event for back button */
   handleBackRequest() {
     $('#group_divs').attr("style", "");
+    $('#evalBtn').attr("disabled", false); // enables evaluation button
 
     var formLength = document.getElementsByTagName('input').length;
     if (formLength) { // backing up from student info
@@ -255,19 +248,16 @@ class TAHelperUI {
 
   /* Handles click event for evaluation button */
   handleEvaluationRequest() {
-    // $('#evalBtn').attr("disabled", true); // prevents request from being sent multiple times
-    $('.student').hide(100);  // animated
-    // $('.student').remove();
+    $('#evalBtn').attr("disabled", true); // prevents request from being sent multiple times
+    $('.student').fadeOut(300);  // animated
 
     // crude way of determining what the currently selected group is
     var group = $('#group_divs').find($('div'));
     for (var i of $(group)) {
       var flexType = $(i).attr("class").split(" ")[1];
       if (flexType == 'flexContainer') {
-        $(i).css({ display: "" });
-
         var groupID = $(i).attr("id").split("-")[1];
-        console.log(groupID)
+        // console.log(groupID)
       }
     }
 
@@ -282,7 +272,7 @@ class TAHelperUI {
 
 
   /* Turns back button visible or invisible */
-  showBackBtn() { $('#backBtn').show(100); /* animated */ }
+  showBackBtn() { $('#backBtn').show(); }
   hideBackBtn() { $('#backBtn').hide(); }
 
 
@@ -292,7 +282,7 @@ class TAHelperUI {
 
 
   /* Turns download button visible or invisible */
-  showDownloadBtn() { $('#downloadBtn').show(300); /* animated */ }
+  showDownloadBtn() { $('#downloadBtn').show(); }
   hideDownloadBtn() { $('#downloadBtn').hide(); }
 
 

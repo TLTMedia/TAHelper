@@ -105,7 +105,7 @@ class TAHelper {
     var url = `evaluationInfo.php?groupInfo=Group_${groupID}`;
 
     $.getJSON(url).done(result => {
-      console.log(result);
+      // console.log(result);
 
       // set UI template for evaluation form
       this.ui.setEvalTemplate(result);
