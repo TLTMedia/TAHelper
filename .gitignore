@@ -6,5 +6,5 @@
 iam.php
 # ignore directories
 studentInfo/
-groupInfo/
+evalInfo/
 images/
