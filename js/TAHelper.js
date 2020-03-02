@@ -43,8 +43,7 @@ class TAHelper {
       this.ui.showTAGroups();
       this.ui.addBackBtn();
       this.ui.addDropdownMenu();
-      // this.ui.addEvalBtn();
-      // this.ui.addDownloadBtn();
+      this.ui.postAnnouncement();
 
       // install an event listener to be triggered when a student has been selected
       $('#group_divs').on('student:clicked', (evt, studInfo) => {
@@ -52,14 +51,19 @@ class TAHelper {
       });
 
       // install an event listener to be triggered when group evaluations button is selected
-      $('#right_menu').on('select:evaluations', (evt, groupID) => {
+      $('#right_menu').on('request:evaluations', (evt, groupID) => {
         this.loadEvalForm(groupID);
       });
 
       // install an event listener to be triggered when a download request is made
       $('#right_menu').on('request:download', (evt, groupInfo) => {
         // console.log(groupInfo.Group)
-        this.downloadCSV(groupInfo.Group);
+        this.downloadResponses(groupInfo.Group);
+      });
+
+      // install an event listener to be triggered when a clear request is made
+      $('#right_menu').on('request:clear', evt => {
+        this.clearResponses();
       });
     });
   }
@@ -133,7 +137,7 @@ class TAHelper {
 
 
   /* Organizes and exports filled out student forms to a CSV file */
-  downloadCSV (groupInfo) {
+  downloadResponses (groupInfo) {
     var url = `studentInfo.php`;
     var taGroups = [];
     $.each(groupInfo, function(i) {
@@ -149,6 +153,14 @@ class TAHelper {
       hiddenElement.download = 'Student Evaluations.csv';
       hiddenElement.click();
     });
+  }
+
+
+  /* Deletes all students and group evaluation responses from database */
+  clearResponses() {
+    console.log("request to clear responses")
+    var quesURL = `questionInfo.php`;
+    var evalURL = `evaluationInfo.php`;
   }
 
 

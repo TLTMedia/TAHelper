@@ -57,12 +57,17 @@ class TAHelperUI {
     this.showBackBtn();
     this.showEvalBtn();
 
-    var studGroups = this.studInfo.filter(i => i[0].Group == groupID)[0];
+    // console.log(this.studInfo)
+    var studGroups = this.studInfo.filter(i =>  i[0] && i[0].Group == groupID)[0];
     var studDivs = studGroups.map(i => $('<div/>', {
       id: `${i.Name}`,
       "data-hexID":`${i.hexID}`,
       class: `student group-${i.Group} flexChildren`,
-    }).append($('<div/>', {
+    }).append($('<img/>', {
+      class: `profile`,
+      src: `images/${i.Name}.jpg`,
+      onerror: `this.src='images/no-image-available.jpg'` // alt image if none found
+    })).append($('<div/>', {
       class: `flexText`,
       html: `${i.Name.replace(/_/g, ' ')}`  // replaces all underscore with spaces
     })));
@@ -79,6 +84,8 @@ class TAHelperUI {
       console.log("Please define a UI template first")
       return;
     }
+
+    $('.profile').addClass('minimize');
 
     var formDivs = this.questionTemplate.map(i => [ $('<label/>', {
       class: `${i.class}-label`,
@@ -146,6 +153,7 @@ class TAHelperUI {
     // console.log(item, itemID, itemClass)
 
     item.parent().animate({ display: "block" });
+    item.css("width", "100%");  // in case few students in group
     item.animate({ height: "100%" });
 
     // hide all other items with the same class
@@ -189,6 +197,26 @@ class TAHelperUI {
   }
 
 
+  /* Post an announcement in the header */
+  postAnnouncement() {
+    var d = new Date();
+    var month = d.getMonth()+1;
+    var day = d.getDate();
+    var formatDate = d.getFullYear() + '-' + (month < 10 ? '0' : '') + month + '-' + (day < 10 ? '0' : '') + day;
+    console.log(formatDate);
+
+    var textBox = $('<div/>', {
+      class: `headerText`,
+      html: `Evaluations will be cleared on `
+    }).append($('<input/>', {
+      type: `datetime-local`,
+      value: `${formatDate}`
+    }));
+
+    this.addToParentById('header' /* parent container */, textBox);
+  }
+
+
   /* Handles click event when a group is selected */
   handleClickEvent (clickedItem) {
     // console.log(clickedItem)
@@ -224,7 +252,7 @@ class TAHelperUI {
     $('#evalBtn').attr("disabled", false); // enables evaluation button
 
     var formLength = document.getElementsByTagName('input').length;
-    if (formLength) { // backing up from student info
+    if (formLength > 1) { // backing up from student info
       $('.student').remove();
 
       // crude way of determining what the currently selected group is
@@ -261,13 +289,18 @@ class TAHelperUI {
       }
     }
 
-    $('#right_menu').trigger('select:evaluations', groupID);
+    $('#right_menu').trigger('request:evaluations', groupID);
   }
 
 
   /* Handles click event for download button */
   handleDownloadRequest() {
     $('#right_menu').trigger('request:download', this.groupInfo);
+  }
+
+  /* Handles click event for clear button */
+  handleClearRequest() {
+    $('#right_menu').trigger('request:clear');
   }
 
 
@@ -317,12 +350,17 @@ class TAHelperUI {
       id: 'downloadBtn',
       html: 'Download Responses',
     });
+    var clearBtn = $('<button/>', {
+      id: 'clearBtn',
+      html: 'Clear Responses',
+    });
 
     $(evalBtn).hide();  // initially hidden
     $(evalBtn).click(evt => this.handleEvaluationRequest());
     $(downloadBtn).click(evt => this.handleDownloadRequest());
+    $(clearBtn).click(evt => this.handleClearRequest());
 
-    dropdownMenu.append(evalBtn, downloadBtn);
+    dropdownMenu.append(evalBtn, downloadBtn, clearBtn);
     this.addToParentById('right_menu' /* parent container */, dropdownBtn);
     this.addToParentById('right_menu' /* parent container */, dropdownMenu);
   }

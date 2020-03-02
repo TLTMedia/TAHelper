@@ -24,6 +24,11 @@ input[type=radio] {
   width: 1%;
 }
 
+input[type=datetime-local] {
+  width: 16%;
+  margin: 0px 5px;
+}
+
 button {
   display: inline-block;
   background-color: black;
@@ -35,6 +40,27 @@ button {
   text-align: center;
   text-decoration: none;
   cursor: pointer;
+}
+
+img.profile {
+  width: 150px;
+  height: 150px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+img.minimize {
+  width: 50px;
+  height: 50px;
+  margin: 5px;
+}
+
+div.announcement {
+  height: 40px;
+  padding: 0px 125px;
+  background-color: darkgray;
+  text-align: center;
+  justify-content: center;
 }
 
 div.menu {
@@ -115,6 +141,10 @@ div#right_menu:hover .dropdown-content {
   width: 100%;
   padding-left: 10px;
   justify-content: left;
+}
+
+.headerText {
+  padding: 10px 0px;
 }
 
 .inputText {
