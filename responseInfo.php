@@ -2,7 +2,7 @@
 $type = $_GET["type"];
 $filename = $_GET["filename"];
 
-if ($type == "Student") { // student responses
+if ($type == "student") { // student responses
   $formURL = "studentResponses/$filename.json";
   $template = "json/questionnaire.json";
 } else {  // group responses
@@ -19,10 +19,12 @@ if (!isset($_POST["data"])) { /* GET request */
     $data = file_get_contents($template);
     print($data);
   }
+
 } else {
+
   $data = json_decode("{}");
 
-  if ($type == "Student") {  /* Student POST request */
+  if ($type == "student") {  /* Student POST request */
     $dataArray = str_replace("Group", "", explode("_", $filename));
 
     $group_id = $dataArray[0];
@@ -34,7 +36,8 @@ if (!isset($_POST["data"])) { /* GET request */
       $last_name = $dataArray[2];
     }
 
-  } else if ($type == "Group") {  /* Group POST request */
+  } else {  /* Group POST request */
+
     include "iam.php";
     $taInfo = getTAInfo();
 
@@ -48,9 +51,9 @@ if (!isset($_POST["data"])) { /* GET request */
   $data->groupid = $group_id;
 
   $decoded_data = json_decode("{}");
-  if ($type == "Student") {
+  if ($type == "student") { /* Student POST request */
     $decoded_data->studentData = $data;
-  } else {
+  } else {  /* Group POST request */
     $decoded_data->taData = $data;
   }
   $decoded_data->formData = $_POST['data'];

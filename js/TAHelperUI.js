@@ -295,12 +295,12 @@ class TAHelperUI {
 
   /* Handles click event for download button */
   handleDownloadRequest() {
-    $('#right_menu').trigger('request:download', this.groupInfo);
+    $('#right_menu').trigger('request:download', {type: "all", groupInfo: this.groupInfo});
   }
 
   /* Handles click event for clear button */
   handleClearRequest() {
-    $('#right_menu').trigger('request:clear');
+    $('#right_menu').trigger('request:clear', {type: "all", groupInfo: this.groupInfo});
   }
 
 
