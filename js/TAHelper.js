@@ -58,7 +58,7 @@ class TAHelper {
       // install an event listener to be triggered when a download request is made
       $('#right_menu').on('request:download', (evt, groupInfo) => {
         // console.log(groupInfo.Group)
-        this.downloadResponses(groupInfo.Group);
+        this.downloadResponses("Student", groupInfo.Group).then(()=> this.downloadResponses("Group", groupInfo.Group));
       });
 
       // install an event listener to be triggered when a clear request is made
@@ -71,7 +71,7 @@ class TAHelper {
 
   /* Retrieves or intializes selected student's copy of questionnaire */
   loadStudForm (studentName, groupID) {
-    var url = `questionInfo.php?studentInfo=Group${groupID}_${studentName}`;
+    var url = `responseInfo.php?type=Student&filename=Group${groupID}_${studentName}`;
 
     $.getJSON(url).done(result => {
       // console.log(result, result.formData)
@@ -84,6 +84,7 @@ class TAHelper {
       this.ui.showStudentInfo(studentName, groupID);
 
       // add event listeners to UI elements
+      // console.log($(`#${studentName} input`))
       $(`#${studentName} input`).on('input change', (evt)=> {
         var className = $(evt.currentTarget).attr("class");
         var value = $(evt.currentTarget).val();
@@ -106,7 +107,7 @@ class TAHelper {
 
   /* Retrieves or initializes group evaluation form */
   loadEvalForm (groupID) {
-    var url = `evaluationInfo.php?groupInfo=Group_${groupID}`;
+    var url = `responseInfo.php?type=Group&filename=Group${groupID}`;
 
     $.getJSON(url).done(result => {
       // console.log(result);
@@ -136,21 +137,22 @@ class TAHelper {
   }
 
 
-  /* Organizes and exports filled out student forms to a CSV file */
-  downloadResponses (groupInfo) {
-    var url = `studentInfo.php`;
+  /* Organizes and exports responses to a CSV file */
+  downloadResponses (type, groupInfo) {
+    var url = `csvInfo.php?type=${type}`;
+
     var taGroups = [];
     $.each(groupInfo, function(i) {
       var groupID = groupInfo[i].id;
       taGroups.push(groupID);
-    })
+    });
 
-    $.post(url, {groups: taGroups}).done(result => {
+    return $.post(url, {groups: taGroups}).done(result => {
       // console.log(result)
       var hiddenElement = document.createElement('a');
       hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(result);
       hiddenElement.target = '_blank';
-      hiddenElement.download = 'Student Evaluations.csv';
+      hiddenElement.download = `${type} Evaluations.csv`;
       hiddenElement.click();
     });
   }
@@ -159,13 +161,11 @@ class TAHelper {
   /* Deletes all students and group evaluation responses from database */
   clearResponses() {
     console.log("request to clear responses")
-    var quesURL = `questionInfo.php`;
-    var evalURL = `evaluationInfo.php`;
   }
 
 
   /* Update the questionnaire form UI to correctly reflect changes to data */
-  updateUI (question, val) {
+  updateQuesUI (question, val) {
     if (question == 'Comments') {
       this.ui.setQuesHTML(question, val);
     } else {

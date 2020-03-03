@@ -1,12 +1,20 @@
 <?php
+$type = strtolower($_GET['type']);
+
 header('Content-type: text/csv');
 header('Content-disposition: attachment; filename=Student Evaluations.csv');
-
 $outfile = fopen('php://output', 'w');
-$header = array("Last Name", "First Name", "Group");
-// print_r(implode(',', $header));
 
-$filename = "json/questionnaire.json";
+if ($type == "student") { // student responses
+  $header = array("Last Name", "First Name", "Group ID");
+  $filename = "json/questionnaire.json";
+} else {  // group responses
+  $header = array("Group ID");
+  $filename = "json/evaluation.json";
+}
+// print_r(implode(',', $header));
+// $typeMap=array("Student"=>"studt")
+
 $form_data = file_get_contents($filename);
 $decoded_formdata = json_decode($form_data);
 // print_r($decoded_formdata);
@@ -26,24 +34,27 @@ foreach ($decoded_formdata as $form_elem) {
 // echo '<br/>';
 fputcsv($outfile, $header);
 
-foreach (glob("studentInfo/Group{" . $group_filter . "}*", GLOB_BRACE) as $pathname) {
+foreach (glob($type . "Responses/Group{" . $group_filter . "}*", GLOB_BRACE) as $pathname) {
     // echo "$pathname size " . filesize($pathname) . "\n";
 
-    list($dir, $filename) = explode("/", $pathname);
-
     $replace = array(".json", "Group");
-    $stud_info = str_replace($replace, "", explode("_", $filename));
+    list($dir, $filename) = explode("/", $pathname);
+    $info = str_replace($replace, "", explode("_", $filename));
 
-    // for students with two first names
-    if (count($stud_info) == 4) {
-      list($group_id, $fn1, $fn2, $last_name) = $stud_info;
-      $first_name = $fn1 . " " . $fn2;
-    } else {
-      list($group_id, $first_name, $last_name) = $stud_info;
+    if ($type == "group") { // group responses
+      $group_id = $info[0];
+      $entry = array($group_id);
+    } else {  // student responses
+      // for students with two first names
+      if (count($info) == 4) {
+        list($group_id, $fn1, $fn2, $last_name) = $info;
+        $first_name = $fn1 . " " . $fn2;
+      } else {
+        list($group_id, $first_name, $last_name) = $info;
+      }
+      $entry = array($last_name, $first_name, $group_id);
     }
-
-    $stud_array = array($last_name, $first_name, $group_id);
-    // print_r(implode(',', $stud_array));
+    // print_r(implode(',', $entry));
 
     $raw_data = file_get_contents($pathname);
     $json_data = json_decode($raw_data);
@@ -59,12 +70,12 @@ foreach (glob("studentInfo/Group{" . $group_filter . "}*", GLOB_BRACE) as $pathn
         default:
           $response = $form_elem->value;
       }
-      array_push($stud_array, $response);
+      array_push($entry, $response);
     }
 
     // print_r(implode(',', $stud_array));
     // echo '<br/>';
-    fputcsv($outfile, $stud_array);
+    fputcsv($outfile, $entry);
 }
 
 // echo "cell 1, cell 2";

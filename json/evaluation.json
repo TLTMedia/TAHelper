@@ -1,5 +1,5 @@
 [{
-  "class": "GroupAttendance",
+  "class": "Attendance",
   "type": "radio",
   "label": "Does this group have three or more students present in class at a given time?",
   "options": ["Often", "Occasionally", "Rarely", "Not sure"],
@@ -17,7 +17,7 @@
   "options": ["Often", "Occasionally", "Rarely", "Not sure"],
   "value": ""
 }, {
-  "class": "NameTags",
+  "class": "Nametags",
   "type": "radio",
   "label": "Do most members bring their name tags?",
   "options": ["Exceptional", "Satisfactory", "Unsatisfactory"],

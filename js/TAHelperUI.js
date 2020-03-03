@@ -348,11 +348,11 @@ class TAHelperUI {
     });
     var downloadBtn = $('<button/>', {
       id: 'downloadBtn',
-      html: 'Download Responses',
+      html: 'Download All Responses',
     });
     var clearBtn = $('<button/>', {
       id: 'clearBtn',
-      html: 'Clear Responses',
+      html: 'Clear All Responses',
     });
 
     $(evalBtn).hide();  // initially hidden
