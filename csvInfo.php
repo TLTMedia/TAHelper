@@ -16,7 +16,7 @@ if ($request == "clear") {  /* Clear request */
 } else {  /* Download request */
 
   header('Content-type: text/csv');
-  header('Content-disposition: attachment; filename=Student Evaluations.csv');
+  header('Content-disposition: attachment; filename=responses.csv');
   $outfile = fopen('php://output', 'w');
 
   if ($type == "student") { // student responses

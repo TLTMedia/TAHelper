@@ -92,8 +92,7 @@ class TAHelper {
       `responseInfo.php?type=${type}&filename=Group${groupID}`;
 
     $.getJSON(url).done(result => {
-      console.log(result, result.formData)
-
+      // console.log(result, result.formData)
       // check for existing form data
       if (result.formData != null) {
         result = result.formData;
@@ -150,10 +149,11 @@ class TAHelper {
     return $.post(url, {groups: taGroups}).done(result => {
       // console.log(result)
       if (request == "download") {
+        var capType = type.substr(0,1).toUpperCase() + type.substr(1).toLowerCase();
         var hiddenElement = document.createElement('a');
         hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(result);
         hiddenElement.target = '_blank';
-        hiddenElement.download = `${type} Evaluations.csv`;
+        hiddenElement.download = `${capType} Evaluations.csv`;
         hiddenElement.click();
       }
     });
