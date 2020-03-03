@@ -5,6 +5,5 @@
 # ignore other files
 iam.php
 # ignore directories
-studentInfo/
-evalInfo/
+*Responses/
 images/
