@@ -2,8 +2,10 @@
 .DS_Store
 .htaccess
 ._*
-# ignore other files
+.vscode
+# ignore secret files
 iam.php
+json/dataDev.json
 # ignore directories
 *Responses/
 images/
