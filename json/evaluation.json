@@ -32,6 +32,6 @@
   "class": "Comments",
   "type": "textarea",
   "label": "Comments",
-  "value": "",
-  "html": ""
+  "html": "",
+  "value": ""
 }]

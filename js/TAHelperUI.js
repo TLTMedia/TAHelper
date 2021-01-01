@@ -1,153 +1,174 @@
 /* JavaScript file for handling UI in TAHelper */
 
 class TAHelperUI {
-
-  /* Class constructor */
-  constructor (groupInfo, studInfo) {
-    this.groupInfo = groupInfo;
+  constructor (userInfo, studInfo) {
+    this.userInfo = userInfo;
     this.studInfo = studInfo;
-    // console.log(this.groupInfo, this.studInfo)
+    // console.log(this.userInfo, this.studInfo)
   }
 
-  /* Sets UI template */
-  setQuesTemplate (uiTemplate) { this.questionTemplate = uiTemplate; }
-  setEvalTemplate (uiTemplate) { this.evaluationTemplate = uiTemplate; }
+  /* Set UI template */
+  setQuesTemplate (template) { this.questionTemplate = template; }
+  setEvalTemplate (template) { this.evaluationTemplate = template; }
 
   /* Updates any data changes to questionnaire form */
-  setQuesHTML (inputType, value) {
-    var inputElem = this.questionTemplate.find(item => item.class == `${inputType}`);
-    // console.log(inputElem)
+  setValue (formType, inputType, value) {
+    // identify the form template that needs to be updated
+    var template = (formType == "student") ? this.questionTemplate : this.evaluationTemplate;
+    var formElem = template.find(item => item.class == `${inputType}`);
+
     if (inputType == 'Comments') {
-      inputElem.html = value;
+      formElem.html = value; // textarea
     } else {
-      inputElem.value = value;
+      formElem.value = value;
     }
   }
 
+  /* Adds child to parent div specified by ID */
+  addToParentById (divID, child) {
+    $(`#${divID}`).append(child);
+  }
 
-  /* Updates any data changes to evaluation form */
-  setEvalHTML (inputType, value) {
-    var inputElem = this.evaluationTemplate.find(item => item.class == `${inputType}`);
-    // console.log(inputElem)
-    if (inputType == 'Comments') {
-      inputElem.html = value;
-    } else {
-      inputElem.value = value;
-    }
+  /* Adds child to parent div specified by class */
+  addToParentByClass (divClass, child) {
+    $(`.${divClass}`).append(child);
   }
 
 
-  /* Creates a list of all the groups that the TA oversees */
-  showTAGroups() {
-    var taStudGroupsDiv = this.groupInfo.Group.map(i => $('<div/>', {
-      id: `group-${i.id}`,
+  // /* Updates any data changes to evaluation form */
+  // setQuesHTML (inputType, value) {
+  //   var formElem = this.questionTemplate.find(item => item.class == `${inputType}`);
+  //   // console.log(formElem)
+  //   if (inputType == 'Comments') {
+  //     formElem.html = value;
+  //   } else {
+  //     formElem.value = value;
+  //   }
+  // }
+  //
+  //
+  // /* Updates any data changes to evaluation form */
+  // setEvalHTML (inputType, value) {
+  //   var formElem = this.evaluationTemplate.find(item => item.class == `${inputType}`);
+  //   // console.log(formElem)
+  //   if (inputType == 'Comments') {
+  //     formElem.html = value;
+  //   } else {
+  //     formElem.value = value;
+  //   }
+  // }
+
+
+  /* Displays the starting page that user sees when logged in */
+  showHomePage() {
+    return new Promise((resolve, reject) => {
+      var role = this.userInfo.Type;
+      console.log(role)
+
+      switch (role) {
+        case "Professor":
+        case "GTA":
+          // TODO: show all sessions and groups
+          // this.postAnnouncement();
+          
+          break;
+        case "Group Facilitator":
+          // TODO: only show sessions and groups they are in charge of
+          break;
+        default:
+          console.log("Invalid role: ", role)
+      }
+
+      this.showSessionGroups();
+      this.addMenu();
+
+      resolve("done");
+    });
+  }
+
+
+  /* Displays all of the groups that the user is responsible for */
+  showSessionGroups() {
+    var groupDivs = this.userInfo.Group.map(id => $('<div/>', {
+      id: `${id}`,
       class: `ta-group flexChildren`
     }).append($('<div/>', {
       class: `flexText`,
-      html: `Group ${i.id}`
-    })));
+      html: `Session ${id.split('-')[1]}<br>Group ${id.split('-')[0]}`
+    })).click(evt => { this.handleClickEvent($(evt.currentTarget)) }));
 
-    this.addToParentById('group_divs' /* parent container */, taStudGroupsDiv);
-    $('.ta-group').click(evt => this.handleClickEvent($(evt.currentTarget)));
+    this.addToParentById("content" /* parent container */, groupDivs);
   }
 
 
-  /* Displays a list of students in the group */
-  showStudentsInGroup (groupID) {
+  /* Displays all of the students in the group */
+  showStudsInGroup (groupID) {
     this.showBackBtn();
     this.showEvalBtn();
 
-    // console.log(this.studInfo)
-    var studGroups = this.studInfo.filter(i =>  i[0] && i[0].Group == groupID)[0];
-    var studDivs = studGroups.map(i => $('<div/>', {
-      id: `${i.Name}`,
+    if (this.userInfo.Type == "Group Facilitator") {
+      this.showDropdownBtn();
+    }
+
+    var groupInfo = this.studInfo.filter(grp => grp[0].Group == groupID)[0];
+    // console.log(groupInfo);
+
+    var studDivs = groupInfo.map(i => $('<div/>', {
+      id: `${(i.Name.includes('\'') ? i.Name.replaceAll('\'', '-') : i.Name)}`,  // students might have names with special characters
       "data-hexID":`${i.hexID}`,
-      class: `student group-${i.Group} flexChildren`,
+      class: `student ${i.Group} flexChildren`,
     }).append($('<img/>', {
       class: `profile`,
-      src: `images/${i.Name}.jpg`,
+      src: `images/${i.Name + "," + i.hexID}.jpg`,
       onerror: `this.src='images/no-image-available.jpg'` // alt image if none found
-    })).append($('<div/>', {
-      class: `flexText`,
-      html: `${i.Name.replace(/_/g, ' ')}`  // replaces all underscore with spaces
+    }), $('<div/>', {
+      class: `studentInfo flexText`,
+      html: `${i.Name.replaceAll('_', ' ')}`  // replaces all underscore with spaces
     })));
 
-    this.addToParentById(`group-${groupID}`, studDivs);
-    $('.student').on("click",evt => this.handleClickEvent($(evt.currentTarget)));
+    this.addToParentById(`${groupID}`, studDivs);
+    $('.student').click(evt => this.handleClickEvent($(evt.currentTarget)));
   }
 
 
-  /* Displays student questionnaire questions and responses */
-  showStudentInfo (studentName, groupID) {
+  /* Displays student questionnaire form */
+  showStudForm (studentName, groupID) {
     // make sure that a UI template has been provided, otherwise return error
-    if ($.type(this.questionTemplate) == 'undefined') {
+    if (typeof(this.questionTemplate) == 'undefined') {
       console.log("Please define a UI template first")
       return;
     }
 
-    $('.profile').addClass('minimize');
+    
 
-    var formDivs = this.questionTemplate.map(i => [ $('<label/>', {
-      class: `${i.class}-label`,
-      for: `${i.class}`,
-      html: `${i.label}`,
-    }), ...this.makeFormInput(i.type, i.options, i) ]);
-
-    $.each(formDivs, (i) => {
-      this.addToParentById(studentName, formDivs[i]);
-    });
+    // $('.profile').addClass('minimize'); // shrink the student picture
+    this.addToParentById(studentName, this.makeForm(this.questionTemplate));
   }
 
 
   /* Displays group evaluation questions and responses */
-  showGroupEval (groupID) {
+  showGroupForm (groupID) {
     // make sure that a UI template has been provided, otherwise return error
-    if ($.type(this.evaluationTemplate) == 'undefined') {
+    if (typeof(this.evaluationTemplate) == 'undefined') {
       console.log("Please define a UI template first")
       return;
     }
 
+    var evalText = $('<div/>', {
+      html: `Group Evaluation`
+    }).css({ "padding-left": "20px" }); // override inherited css
+
     var evalDiv = $('<div/>', {
-      id: `group-evaluations`,
-      class: `student flexContainer`
-    }).append($('<div/>', {
-      class: `flexText flexChildrenText`,
-      html: `Group Evaluation`  // replaces all underscore with spaces
-    }));
+      class: `student ${groupID} flexContainer`
+    }).css({ margin: "0px", "padding-top": "10px" }); // override inherited css
 
-    this.addToParentById(`group-${groupID}`, evalDiv);
-    $('#group-evaluations').css({ margin: "0px", "padding-top": "10px" }); // override inherited css
-
-    var formDivs = this.evaluationTemplate.map(i => [ $('<label/>', {
-      class: `${i.class}-label`,
-      for: `${i.class}`,
-      html: `${i.label}`,
-    }), ...this.makeFormInput(i.type, i.options, i) ]);
-
-    $.each(formDivs, (i) => {
-      $('#group-evaluations').hide(); // for animation
-      this.addToParentById('group-evaluations', formDivs[i]);
-      $('#group-evaluations').slideDown(300); // animated
-    });
+    evalDiv.append(evalText, this.makeForm(this.evaluationTemplate));
+    this.addToParentById(`${groupID}`, evalDiv);
   }
 
 
-  /* Adds child to Parent div specified by ID */
-  addToParentById (divID, child) {
-    var id = '#' + divID;
-    $(id).append(child);
-  }
-
-
-  /* Adds child to Parent div specified by class */
-  addToParentByClass (divClass, child) {
-    var className = '.' + divClass;
-    $(className).append(child);
-  }
-
-
-  /* Expands given item to window size and hide all other items in same class */
-  hideAndExpand (item) {
+  /* Expands selected item to window size and hide all other items in same class */
+  expandSelection (item) {
     var itemID = item.attr("id")
     var itemClass = '.' + item.attr("class").split(" ")[0];
     // console.log(item, itemID, itemClass)
@@ -177,23 +198,37 @@ class TAHelperUI {
     switch (data.type) {
       case 'radio':
         return options.map(option => $('<input>', {
-            class: `${data.class}`,
-            name: `${data.class}`,
             type: `radio`,
+            name: `${data.class}`,
+            value: `${option}`,
             checked: (option == data.value),
-            value: `${option}`
           }).add($('<text/>', {
-            class: `inputText`,
             html: `${option}`
           }))
         );
         break;
       case 'textarea':
-        return $(`<${tagTypes[tag]}>`, data).css("height", "100px");
-        break;
+        return $(`<${tagTypes[tag]}>`, { html: `${data.html}` });
       default:
         return $(`<${tagTypes[tag]}>`, data);
     }
+  }
+
+
+  /* Creates and returns a questionnaire form using the given template */
+  makeForm (template) {
+    var formElements = template.map(i => $('<div/>', {
+      id: `question-${i.class.toLowerCase()}`,
+      class: `form-element`,
+    }).append($('<label/>', {
+      html: `${i.label}`,
+    }), ...this.makeFormInput(i.type, i.options, i)));
+
+    var formDiv = $('<div/>', {
+      id: `questionnaire`,
+    }).append(...formElements);
+
+    return formDiv;
   }
 
 
@@ -205,71 +240,69 @@ class TAHelperUI {
     var formatDate = d.getFullYear() + '-' + (month < 10 ? '0' : '') + month + '-' + (day < 10 ? '0' : '') + day;
     console.log(formatDate);
 
-    var textBox = $('<div/>', {
-      class: `headerText`,
+    var text = $('<text/>', {
       html: `Evaluations will be cleared on `
-    }).append($('<input/>', {
-      type: `datetime-local`,
-      value: `${formatDate}`
-    }));
+    });
 
-    this.addToParentById('header' /* parent container */, textBox);
+    var date = $('<input/>', {
+      type: `datetime-local`,
+      value: `${formatDate}`,
+    });
+
+    this.addToParentById('header' /* parent container */, text);
+    this.addToParentById('header' /* parent container */, date);
   }
 
 
   /* Handles click event when a group is selected */
   handleClickEvent (clickedItem) {
     // console.log(clickedItem)
-    var clickedClass = clickedItem.attr("class").split(" ")[0];
-
-    clickedItem.off(); // removes click event
+    var clickedGroup = clickedItem.attr("class").split(' ')[0];
+    clickedItem.off("click"); // removes click event
     clickedItem.removeClass("flexChildren").addClass("flexContainer");
-    if (clickedClass == 'student') {
+    if (clickedGroup == 'student') {
+      // clickedItem.addClass("flexContainerExpanded");
       clickedItem.css({ margin: "0px", "padding-top": "10px" });
     }
 
     var clickedText = $(clickedItem.children()[0]);
-    if (clickedClass == 'ta-group') {
+    if (clickedGroup == 'ta-group') {
+      clickedText.html(clickedText.html().replace('<br>', ' | '));
       clickedText.addClass("flexContainerText");
-    } else {
-      clickedText.addClass("flexChildrenText");
     }
 
-    var clickedID = (clickedClass == 'ta-group') ? clickedItem.attr("id").split("-")[1] : clickedItem.attr("class").split(" ")[1].split("-")[1];
-    this.hideAndExpand(clickedItem);
-    if (clickedClass == 'ta-group') {
-      this.showStudentsInGroup(clickedID);
+    var clickedGrpID = (clickedGroup == 'ta-group') ? clickedItem.attr("id") : clickedItem.attr("class").split(" ")[1];
+    this.expandSelection(clickedItem);
+    if (clickedGroup == 'ta-group') {
+      this.showStudsInGroup(clickedGrpID);
     } else {
       var studentName = clickedItem.attr("id");
-      $('#group_divs').trigger('student:clicked', {0:studentName, 1:clickedID});  // notify TAHelper that a student has been selected
+      // console.log(studentName, clickedGrpID);
+      $("#content").trigger('student:clicked', [studentName, clickedGrpID]);  // notify TAHelper that a student has been selected
     }
   }
 
 
   /* Handles click event for back button */
   handleBackRequest() {
-    $('#group_divs').attr("style", "");
+    $('#content').attr("style", "");
     $('#evalBtn').attr("disabled", false); // enables evaluation button
 
     var formLength = document.getElementsByTagName('input').length;
     if (formLength > 1) { // backing up from student info
       $('.student').remove();
 
-      // crude way of determining what the currently selected group is
-      var group = $('#group_divs').find($('div'));
-      for (var i of $(group)) {
-        var flexType = $(i).attr("class").split(" ")[1];
-        if (flexType == 'flexContainer') {
-          $(i).css({ display: "" });
-
-          var groupID = $(i).attr("id").split("-")[1];
-          this.showStudentsInGroup(groupID);
-        }
-      }
+      // crude way of determining which group is selected, contains unique list of class names
+      var groupID = $('.ta-group.flexContainer').attr("id");
+      this.showStudsInGroup(groupID);
     } else {  // backing up from student groups
       $('.ta-group').remove();
       this.hideBackBtn();
-      this.showTAGroups();
+      this.hideEvalBtn();
+      if (this.userInfo.Type != "Group Administrator") {
+        this.hideDropdownBtn();
+      }
+      this.showSessionGroups();
     }
   }
 
@@ -279,56 +312,76 @@ class TAHelperUI {
     $('#evalBtn').attr("disabled", true); // prevents request from being sent multiple times
     $('.student').fadeOut(300);  // animated
 
-    // crude way of determining what the currently selected group is
-    var group = $('#group_divs').find($('div'));
-    for (var i of $(group)) {
-      var flexType = $(i).attr("class").split(" ")[1];
-      if (flexType == 'flexContainer') {
-        var groupID = $(i).attr("id").split("-")[1];
-        // console.log(groupID)
-      }
-    }
-
-    $('#right_menu').trigger('request:evaluations', groupID);
+    // crude way of determining which group is selected, contains unique list of class names
+    var groupID = $('.ta-group.flexContainer').attr("id");
+    $('#right-menu').trigger('request:evaluations', groupID);
   }
 
 
   /* Handles click event for download button */
   handleDownloadRequest() {
-    $('#right_menu').trigger('request:download', {type: "all", groupInfo: this.groupInfo});
+    $('#right-menu').trigger('request:download', {type: "all", groupInfo: this.userInfo});
   }
 
   /* Handles click event for clear button */
   handleClearRequest() {
-    $('#right_menu').trigger('request:clear', {type: "all", groupInfo: this.groupInfo});
+    $('#right-menu').trigger('request:clear', {type: "all", groupInfo: this.userInfo});
   }
 
+
+  /* Turns left menu button visible or invisible */
+  showDropdownBtn() { $('#dropdownBtn').show(); }
+  hideDropdownBtn() { $('#dropdownBtn').hide(); }
 
   /* Turns back button visible or invisible */
   showBackBtn() { $('#backBtn').show(); }
   hideBackBtn() { $('#backBtn').hide(); }
 
-
   /* Turns evaluation button visible or invisible */
   showEvalBtn() { $('#evalBtn').show(); }
   hideEvalBtn() { $('#evalBtn').hide(); }
 
+  /* Turns download button visible or invisible */
+  showDownloadAllBtn() { $('#dwnAllBtn').show(); }
+  hideDownloadAllBtn() { $('#dwnAllBtn').hide(); }
 
   /* Turns download button visible or invisible */
-  showDownloadBtn() { $('#downloadBtn').show(); }
-  hideDownloadBtn() { $('#downloadBtn').hide(); }
+  showDownloadTABtn() { $('#dwnTABtn').show(); }
+  hideDownloadTABtn() { $('#dwnTABtn').hide(); }
+
+  /* Turns download button visible or invisible */
+  showDownloadGroupBtn() { $('#dwnGroupBtn').show(); }
+  hideDownloadGroupBtn() { $('#dwnGroupBtn').hide(); }
+
+
+  /* Add menu options to the top of the page */
+  addMenu() {
+    this.initRightMenu();
+    this.initLeftMenu();
+  }
+
+  /* Initialize the right menu */
+  initRightMenu() {
+    this.addDropdownMenu();
+  }
+
+  /* Initialize the left menu */
+  initLeftMenu() {
+    this.addBackBtn();
+  }
 
 
   /* Adds a back button to the top of the page */
   addBackBtn() {
     var backBtn = $('<button/>', {
       id: 'backBtn',
+      class: `menu-button`,
       html: 'Back'
     });
 
     $(backBtn).hide();  // initially hidden
     $(backBtn).click(evt => this.handleBackRequest());
-    this.addToParentById('left_menu' /* parent container */, backBtn);
+    this.addToParentById('left-menu' /* parent container */, backBtn);
   }
 
 
@@ -336,33 +389,47 @@ class TAHelperUI {
   addDropdownMenu() {
     var dropdownBtn = $('<button/>', {
       id: 'dropdownBtn',
+      class: `menu-button`,
       html: 'Menu'
     });
     var dropdownMenu = $('<div/>', {
       id: 'dropdownMenu',
       class: 'dropdown-content'
-    })
-    var evalBtn = $('<button/>', {
+    });
+    var evalBtn = $('<button/>', {  // initally hidden
       id: 'evalBtn',
-      html: 'Group Evaluation',
-    });
-    var downloadBtn = $('<button/>', {
-      id: 'downloadBtn',
-      html: 'Download All Responses',
-    });
+      html: 'Group Evaluation'
+    }).click(evt => this.handleEvaluationRequest()).hide();
+    var dwnAllBtn = $('<button/>', {  // initally hidden
+      id: 'dwnAllBtn',
+      class: 'downloadBtn',
+      html: 'Download Responses for All TAs'
+    }).click(evt => this.handleDownloadRequest()).hide();
+    var dwnTABtn = $('<button/>', {  // initally hidden
+      id: 'dwnTABtn',
+      class: 'downloadBtn',
+      html: 'Download All Responses for this TA'
+    }).click(evt => this.handleDownloadRequest()).hide();
+    var dwnGroupBtn = $('<button/>', {  // initally hidden
+      id: 'dwnGroupBtn',
+      class: 'downloadBtn',
+      html: 'Download All Responses for this Group'
+    }).click(evt => this.handleDownloadRequest()).hide();
     var clearBtn = $('<button/>', {
       id: 'clearBtn',
-      html: 'Clear All Responses',
-    });
+      html: 'Clear All Responses'
+    }).click(evt => this.handleClearRequest());
 
-    $(evalBtn).hide();  // initially hidden
-    $(evalBtn).click(evt => this.handleEvaluationRequest());
-    $(downloadBtn).click(evt => this.handleDownloadRequest());
-    $(clearBtn).click(evt => this.handleClearRequest());
+    if (this.userInfo.Type == "Group Administrator") {
+      dropdownMenu.append(evalBtn, dwnAllBtn, dwnTABtn, dwnGroupBtn, clearBtn);
+    } else {
+      dropdownMenu.append(evalBtn, dwnAllBtn, dwnTABtn, dwnGroupBtn);
+      dropdownBtn.hide();
+    }
 
-    dropdownMenu.append(evalBtn, downloadBtn, clearBtn);
-    this.addToParentById('right_menu' /* parent container */, dropdownBtn);
-    this.addToParentById('right_menu' /* parent container */, dropdownMenu);
+    // dropdownMenu.append(evalBtn, dwnAllBtn, dwnTABtn, dwnGroupBtn, clearBtn);
+    this.addToParentById('right-menu' /* parent container */, dropdownBtn);
+    this.addToParentById('right-menu' /* parent container */, dropdownMenu);
   }
 
 }

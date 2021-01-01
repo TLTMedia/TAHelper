@@ -1,0 +1,99 @@
+/*** CSS content for TAHelper ***/
+@import "flex.css";
+@import "menu.css";
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0px;
+  padding: 0px;
+  background-color: lightgray;
+}
+
+/* input, textarea {
+  width: 100%;
+  margin: 0px 50px;
+  resize: none;
+} */
+
+input[type=radio] {
+  width: 2%;
+  margin: 0px 10px;
+}
+
+input[type=datetime-local] {
+  width: 20%;
+  margin: 0px 5px;
+}
+
+button {
+  cursor: pointer;
+}
+
+label {
+  width: 100%;
+  display: block;
+}
+
+textarea {
+  width: 100%;
+  height: 100px;
+  outline: none;
+}
+
+img {
+  border-style: ridge;
+}
+
+img.profile {
+  width: 150px;
+  height: 150px;
+  margin: auto;
+}
+
+img.minimize {
+  width: 50px;
+  height: 50px;
+  margin: 5px;
+  margin-left: 10px;
+}
+
+div#content {
+  margin: 0px 50px;
+  justify-content: center;
+}
+
+div#header {
+  background-color: darkgray;
+  height: 25px;
+  padding: 5px 125px 0px 125px; /* top right bottom left */
+  text-align: center;
+  justify-content: center;
+}
+
+div#questionnaire {
+  margin: 0px 30px;
+}
+
+div.form-element {
+  font-size: 25px;
+  margin-top: 10px;
+  margin-left: 20px;
+}
+
+div.form-element text {
+  font-size: 20px;
+}
+
+.ta-group {
+  background-color: white;
+  margin: 10px 20px;
+  font-size: 50px;
+}
+
+.student {
+  background-color: gray;
+  padding: 30px 0px;
+  margin: 10px 20px;
+  font-size: 30px;
+}

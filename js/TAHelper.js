@@ -1,84 +1,67 @@
-/* Javascript file for controlling interactions between TAHelperModel and TAHelperUI */
-
-$(init);
-
-/* Global variable */
-var taHelper;
-
-function init() {
-  var courseInfo = $.get("../json/dataDev.json");    // replace with file location with for student and TA data
-  var taInfo = $.get("./iam.php");   // replace with file location for PHP permissions
-
-  $.when(courseInfo, taInfo).done((courseInfo, taInfo) => {
-    taHelper = new TAHelper(courseInfo, taInfo);
-    taHelper.load();
-  });
-}
+/*** Javascript file for controlling interactions between TAHelperModel and TAHelperUI ***/
 
 class TAHelper {
-
-  /* Class constructor */
-  constructor (courseInfo, taInfo) {
-    this.courseInfo = courseInfo;
-    this.taInfo = taInfo;
-    // console.log(this.courseInfo, this.taInfo)
+  constructor (courseInfo, loginInfo) {
+    this.courseInfo = courseInfo[0];
+    this.loginInfo = loginInfo[0];
+    // console.log(this.courseInfo, this.loginInfo)
   }
 
-
-  /* Loads the initial page */
   load() {
+    // load model and gui scripts
     var model = $.get("./js/TAHelperModel.js");
     var ui = $.get("./js/TAHelperUI.js");
 
-    // init instances of TAHelperModel and TAHelperUI
     $.when(model, ui).done(() => {
-      this.model = new TAHelperModel(this.courseInfo, this.taInfo);
-
-      var taGroupInfo = this.model.taGroupInfo;
-      var taStudGroups = this.model.taStudGroups;
-      this.ui = new TAHelperUI(taGroupInfo, taStudGroups);
-
+      this.model = new TAHelperModel(this.courseInfo, this.loginInfo);
+      
+      var user = this.model.getLoginName();
+      var userInfo = this.model.getUserInfo(user);
+      var studInfo = this.model.getAllStudsForUser(user);
+      this.ui = new TAHelperUI(userInfo, studInfo);
       console.log(this.model, this.ui)
 
-      this.ui.showTAGroups();
-      this.ui.addBackBtn();
-      this.ui.addDropdownMenu();
-      this.ui.postAnnouncement();
+      this.ui.showHomePage().then(done => {
+        // install an event listener to be triggered when a student has been selected
+        $('#content').on('student:clicked', (evt, studName, groupID) => {
+          // console.log(studInfo, groupID)
+          this.loadForm("student", studName, groupID); // [0] = student name, [1] = group id
+        });
 
-      // install an event listener to be triggered when a student has been selected
-      $('#group_divs').on('student:clicked', (evt, studInfo) => {
-        // console.log(studInfo)
-        this.loadForm("student", studInfo[0], studInfo[1]); // [0] = student name, [1] = group id
-      });
+        // install an event listener to be triggered when group evaluations button is selected
+        $('#right-menu').on('request:evaluations', (evt, groupID) => {
+          // console.log(groupID)
+          this.loadForm("group", null, groupID);
+        });
 
-      // install an event listener to be triggered when group evaluations button is selected
-      $('#right_menu').on('request:evaluations', (evt, groupID) => {
-        // console.log(groupID)
-        this.loadForm("group", null, groupID);
-      });
+        // install an event listener to be triggered when a download request is made
+        $('#right-menu').on('request:download', (evt, data) => {
+          var type = data.type;
+          var groups = data.groupInfo.Group;
+          // console.log(data, type, groups)
+          if (type == "all") {
+            this.makeRequest("download", "student", groups).then(()=> this.makeRequest("download", "group", groups));
+          } else {
+            this.makeRequest("download", type, groups);
+          }
+        });
 
-      // install an event listener to be triggered when a download request is made
-      $('#right_menu').on('request:download', (evt, data) => {
-        var type = data.type;
-        var groups = data.groupInfo.Group;
-        // console.log(data, type, groups)
-        if (type == "all") {
-          this.makeRequest("download", "student", groups).then(()=> this.makeRequest("download", "group", groups));
-        } else {
-          this.makeRequest("download", type, groups);
-        }
-      });
-
-      // install an event listener to be triggered when a clear request is made
-      $('#right_menu').on('request:clear', (evt, data) => {
-        var type = data.type;
-        var groups = data.groupInfo.Group;
-        // console.log(data, type, groups)
-        if (type == "all") {
-          this.makeRequest("clear", "student", groups).then(()=> this.makeRequest("clear", "group", groups));
-        } else {
-          this.makeRequest("clear", type, groups);
-        }
+        // install an event listener to be triggered when a clear request is made
+        $('#right-menu').on('request:clear', (evt, data) => {
+          var type = data.type;
+          var groups = data.groupInfo.Group;
+          // console.log(data, type, groups)
+          if (type == "all") {
+            if (confirm("Are you sure you would like to clear all responses?")) {
+              this.makeRequest("clear", "student", groups).then(()=> this.makeRequest("clear", "group", groups));
+              alert("All student evaluation responses have been cleared.");
+              location.reload();  // reloads page, brings user back to the home page
+            }
+          }
+          // else {
+          //   this.makeRequest("clear", type, groups);
+          // }
+        });
       });
     });
   }
@@ -93,7 +76,7 @@ class TAHelper {
 
     $.getJSON(url).done(result => {
       // console.log(result, result.formData)
-      // check for existing form data
+      // check for existing form data (null means no previous form data was saved)
       if (result.formData != null) {
         result = result.formData;
       }
@@ -102,22 +85,27 @@ class TAHelper {
       switch (type) {
         case "student":
           this.ui.setQuesTemplate(result);
-          this.ui.showStudentInfo(studentName, groupID);
+          this.ui.showStudForm(studentName, groupID);
           break;
         case "group":
           this.ui.setEvalTemplate(result);
-          this.ui.showGroupEval(groupID);
+          this.ui.showGroupForm(groupID);
           break;
         default:
           console.log("Invalid type: ", type)
+          return;
       }
 
       // add event listeners to UI elements
-      var id = (type == "student") ? studentName : "group-evaluations";
+      // var id = (type == "student") ? studentName : "group-evaluations";
 
-      $(`#${id} input`).on('input change', (evt)=> {
-        var className = $(evt.currentTarget).attr("class");
+      $(`#questionnaire input`).on('input change', evt => {
+        let parent = $(evt.currentTarget.parentNode);
+        var className = parent.attr("id").split('-')[1];
+        className = className.charAt(0).toUpperCase() + className.slice(1); // capitalizing first letter
+
         var value = $(evt.currentTarget).val();
+        // console.log(className, value)
 
         if (evt.type == 'change') {
           this.updateUI(type, className, value);
@@ -125,9 +113,14 @@ class TAHelper {
         }
       });
 
-      $(`#${id} textarea`).on('change blur', (evt)=> {
-        var className = $(evt.currentTarget).attr("class");
+      $(`#questionnaire textarea`).on('change blur', evt => {
+        let parent = $(evt.currentTarget.parentNode);
+        var className = parent.attr("id").split('-')[1];
+        className = className.charAt(0).toUpperCase() + className.slice(1); // capitalizing first letter
+
         var value = $(evt.currentTarget).val();
+        // console.log(className, value)
+
         this.updateUI(type, className, value);
         this.sendQuestionnaire(url, result);
       });
@@ -162,20 +155,7 @@ class TAHelper {
 
   /* Update form UI to correctly reflect changes to data */
   updateUI (type, question, val) {
-    if (question == "Comments") {
-      question = question.split('-')[0];
-    }
-
-    switch (type) {
-      case "student":
-        this.ui.setQuesHTML(question, val);
-        break;
-      case "group":
-        this.ui.setEvalHTML(question, val);
-        break;
-      default:
-        console.log("Invalid form type: ", type)
-    }
+    this.ui.setValue(type, question, val);
   }
 
 

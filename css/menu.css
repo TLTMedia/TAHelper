@@ -1,0 +1,54 @@
+/*** CSS content for menu ***/
+
+button.menu-button {
+  margin: 10px 10px;
+  padding: 10px 30px;
+  background-color: black;
+  border-style: inset;
+  border-color: gray;
+  border-width: 3px;
+  color: white;
+  font-size: 16px;
+}
+
+div.menu {
+  background-color: lightgray;
+  position: fixed;
+  top: 0;
+}
+
+div#left-menu {
+  left: 0;
+}
+
+div#right-menu {
+  right: 0;
+}
+
+div#right-menu:hover .dropdown-content {
+  display: block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: white;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-content button {
+  background-color: white;
+  color: black;
+  padding: 12px 16px;
+  margin: 0px;
+  border: none;
+}
+
+.dropdown-content button:focus {
+  outline: none;
+}
+
+.dropdown-content button:hover {
+  background-color: #f9f9f9;
+}
