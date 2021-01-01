@@ -10,6 +10,28 @@ html, body {
   background-color: lightgray;
 }
 
+div.card-item {
+  background-color: white;
+  border-radius: 20px;
+  margin: 10px 20px;
+}
+
+div.subcard-item {
+  background-color: gray;
+  padding: 30px 0px;
+  margin: 10px 20px;
+}
+
+div.form-element {
+  font-size: 25px;
+  margin-top: 10px;
+  margin-left: 20px;
+}
+
+div.form-element text {
+  font-size: 20px;
+}
+
 /* input, textarea {
   width: 100%;
   margin: 0px 50px;
@@ -58,6 +80,23 @@ img.minimize {
   margin-left: 10px;
 }
 
+.header-width {
+  width: 100%;
+  padding: 20px 0px;
+}
+
+.header-font {
+  font-size: 50px;
+}
+
+.subheader-font {
+  font-size: 30px;
+}
+
+.subtitle-color {
+  color: gray;
+}
+
 div#content {
   margin: 0px 50px;
   justify-content: center;
@@ -73,27 +112,4 @@ div#header {
 
 div#questionnaire {
   margin: 0px 30px;
-}
-
-div.form-element {
-  font-size: 25px;
-  margin-top: 10px;
-  margin-left: 20px;
-}
-
-div.form-element text {
-  font-size: 20px;
-}
-
-.ta-group {
-  background-color: white;
-  margin: 10px 20px;
-  font-size: 50px;
-}
-
-.student {
-  background-color: gray;
-  padding: 30px 0px;
-  margin: 10px 20px;
-  font-size: 30px;
 }

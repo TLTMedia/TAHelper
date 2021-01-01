@@ -9,7 +9,7 @@ class TAHelperModel {
 
   /* Returns the name of the user currently logged in */
   getLoginName() {
-    return `${this.loginInfo.nickname} ${this.loginInfo.sn}`.replace(' ', '_');
+    return `${this.loginInfo.nickname} ${this.loginInfo.sn}`.replaceAll(' ', '_');
   }
 
   /* Returns information on all of the groups that the user oversees and the user role */
@@ -24,15 +24,12 @@ class TAHelperModel {
 
   /* Returns information on all of the groups that the user oversees */
   getUserGroups (username) {
-    var userRole = this.getUserRole(username);
-    return ((userRole == "Professor" || userRole == "GTA") ? this.getAllGroups() : this.getUserInfo(username)["Group"]);
+    return this.getUserInfo(username)["Group"];
   }
 
-  /*  */
+  /* Returns information on all of the groups in the course */
   getAllGroups() {
-    var students = this.getAllStuds();
-    var groupSet = new Set(Object.values(students).map(val => val.Group));
-    return Array.from(groupSet).sort();
+    return this.courseInfo["GroupAll"];
   }
 
   /* Returns information on all of the students in the course */

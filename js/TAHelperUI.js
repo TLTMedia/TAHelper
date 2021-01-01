@@ -13,10 +13,8 @@ class TAHelperUI {
 
   /* Updates any data changes to questionnaire form */
   setValue (formType, inputType, value) {
-    // identify the form template that needs to be updated
     var template = (formType == "student") ? this.questionTemplate : this.evaluationTemplate;
     var formElem = template.find(item => item.class == `${inputType}`);
-
     if (inputType == 'Comments') {
       formElem.html = value; // textarea
     } else {
@@ -63,38 +61,55 @@ class TAHelperUI {
   showHomePage() {
     return new Promise((resolve, reject) => {
       var role = this.userInfo.Type;
-      console.log(role)
-
+      // console.log(role)
       switch (role) {
         case "Professor":
         case "GTA":
           // TODO: show all sessions and groups
           // this.postAnnouncement();
-          
+          this.showSessions();
           break;
         case "Group Facilitator":
           // TODO: only show sessions and groups they are in charge of
+          this.showSessionGroups();
           break;
         default:
           console.log("Invalid role: ", role)
       }
 
-      this.showSessionGroups();
       this.addMenu();
-
       resolve("done");
     });
   }
 
 
-  /* Displays all of the groups that the user is responsible for */
-  showSessionGroups() {
-    var groupDivs = this.userInfo.Group.map(id => $('<div/>', {
-      id: `${id}`,
-      class: `ta-group flexChildren`
+  /* Displays all of the sessions that the user is responsible for */
+  showSessions() {
+    var sessions = new Set(this.userInfo.Group.map(id => id.split('-')[0]));
+    var sessionDivs = Array.from(sessions).map(key => $('<div/>', {
+      id: `${key}`,
+      class: `session card-item flexChildren`
     }).append($('<div/>', {
-      class: `flexText`,
-      html: `Session ${id.split('-')[1]}<br>Group ${id.split('-')[0]}`
+      class: `flexText header-font`,
+      html: `Session ${key}`
+    })).click(evt => { this.handleClickEvent($(evt.currentTarget)) }));
+
+    this.addToParentById("content" /* parent container */, sessionDivs);
+  }
+
+
+  /* Displays all of the groups that the user is responsible for */
+  showSessionGroups (sessionID=null) {
+    var groups = (sessionID) ? this.userInfo.Group.filter(key => key.split('-')[0] == sessionID) : this.userInfo.Group;
+    var groupDivs = groups.map(key => $('<div/>', {
+      id: `${key}`,
+      class: `session-group card-item flexChildren`
+    }).append($('<div/>', {
+      class: `flexText subheader-font subtitle-color`,
+      html: `Session ${key.split('-')[0]}`
+    }), $('<div/>', {
+      class: `flexText header-font`,
+      html: `Group ${key.split('-')[1]}`
     })).click(evt => { this.handleClickEvent($(evt.currentTarget)) }));
 
     this.addToParentById("content" /* parent container */, groupDivs);
@@ -103,31 +118,34 @@ class TAHelperUI {
 
   /* Displays all of the students in the group */
   showStudsInGroup (groupID) {
-    this.showBackBtn();
-    this.showEvalBtn();
-
-    if (this.userInfo.Type == "Group Facilitator") {
-      this.showDropdownBtn();
+    var groupInfo = this.studInfo.filter(grp => grp.length > 0 && grp[0].Group == groupID)[0];
+    // console.log(groupInfo);
+    if (groupInfo == undefined) {
+      // TODO: alert user somehow
+      console.log("Warning: no students in this group");
+      return;
     }
 
-    var groupInfo = this.studInfo.filter(grp => grp[0].Group == groupID)[0];
-    // console.log(groupInfo);
-
     var studDivs = groupInfo.map(i => $('<div/>', {
-      id: `${(i.Name.includes('\'') ? i.Name.replaceAll('\'', '-') : i.Name)}`,  // students might have names with special characters
-      "data-hexID":`${i.hexID}`,
-      class: `student ${i.Group} flexChildren`,
+      id: `${i.hexID}`,
+      // "data-hexID":`${i.hexID}`,
+      class: `student subcard-item flexChildren`,
     }).append($('<img/>', {
       class: `profile`,
       src: `images/${i.Name + "," + i.hexID}.jpg`,
       onerror: `this.src='images/no-image-available.jpg'` // alt image if none found
     }), $('<div/>', {
-      class: `studentInfo flexText`,
+      class: `studentInfo flexText subheader-font`,
       html: `${i.Name.replaceAll('_', ' ')}`  // replaces all underscore with spaces
-    })));
+    })).click(evt => this.handleClickEvent($(evt.currentTarget))));
 
+    // if (this.userInfo.Type == "Group Facilitator") {
+    //   this.showDropdownBtn();
+    // }
+
+    this.showBackBtn();
+    this.showEvalBtn();
     this.addToParentById(`${groupID}`, studDivs);
-    $('.student').click(evt => this.handleClickEvent($(evt.currentTarget)));
   }
 
 
@@ -138,8 +156,6 @@ class TAHelperUI {
       console.log("Please define a UI template first")
       return;
     }
-
-    
 
     // $('.profile').addClass('minimize'); // shrink the student picture
     this.addToParentById(studentName, this.makeForm(this.questionTemplate));
@@ -168,20 +184,17 @@ class TAHelperUI {
 
 
   /* Expands selected item to window size and hide all other items in same class */
-  expandSelection (item) {
-    var itemID = item.attr("id")
-    var itemClass = '.' + item.attr("class").split(" ")[0];
-    // console.log(item, itemID, itemClass)
-
+  expandCardItem (item) {
     item.parent().animate({ display: "block" });
-    item.css("width", "100%");  // in case few students in group
+    item.removeClass("flexChildren").addClass("flexContainer");
+    item.css("width", "100%");
     item.animate({ height: "100%" });
 
-    // hide all other items with the same class
-    for (var i of $(itemClass)) {
-      if ($(i).attr("id") != itemID) {
-        $(i).hide('fast'); // animated
-      }
+    // var itemID = item.attr("id");
+    var itemClass = item.attr("class").split(" ")[0];
+    // console.log(item, itemID, itemClass)
+    if (itemClass == "student") {
+      item.css({"margin":"0px", "padding-top":"10px"});
     }
   }
 
@@ -217,6 +230,7 @@ class TAHelperUI {
 
   /* Creates and returns a questionnaire form using the given template */
   makeForm (template) {
+    console.log("making form")
     var formElements = template.map(i => $('<div/>', {
       id: `question-${i.class.toLowerCase()}`,
       class: `form-element`,
@@ -257,29 +271,63 @@ class TAHelperUI {
   /* Handles click event when a group is selected */
   handleClickEvent (clickedItem) {
     // console.log(clickedItem)
-    var clickedGroup = clickedItem.attr("class").split(' ')[0];
-    clickedItem.off("click"); // removes click event
-    clickedItem.removeClass("flexChildren").addClass("flexContainer");
-    if (clickedGroup == 'student') {
-      // clickedItem.addClass("flexContainerExpanded");
-      clickedItem.css({ margin: "0px", "padding-top": "10px" });
-    }
+    clickedItem.off("click"); // removes click event listener to prevent registering multiple clicks
 
-    var clickedText = $(clickedItem.children()[0]);
-    if (clickedGroup == 'ta-group') {
-      clickedText.html(clickedText.html().replace('<br>', ' | '));
-      clickedText.addClass("flexContainerText");
-    }
+    var clickedID = clickedItem.attr("id");
+    var clickedClass = clickedItem.attr("class").split(' ')[0];
+    console.log(clickedID, clickedClass);
+    switch (clickedClass) {
+      case "session":
+        this.hideItemsByClass(clickedClass);
+        this.showSessionGroups(clickedID);
+        this.showBackBtn();
+        break
+      case "session-group":
+        let clickedSubheaderText = $(clickedItem.children()[0]);
+        let clickedHeaderText = $(clickedItem.children()[1]);
+        let text = clickedSubheaderText.html() + " | " + clickedHeaderText.html();
+        clickedHeaderText.html(text);
+        clickedHeaderText.addClass("header-width");
+        clickedSubheaderText.remove();
 
-    var clickedGrpID = (clickedGroup == 'ta-group') ? clickedItem.attr("id") : clickedItem.attr("class").split(" ")[1];
-    this.expandSelection(clickedItem);
-    if (clickedGroup == 'ta-group') {
-      this.showStudsInGroup(clickedGrpID);
-    } else {
-      var studentName = clickedItem.attr("id");
-      // console.log(studentName, clickedGrpID);
-      $("#content").trigger('student:clicked', [studentName, clickedGrpID]);  // notify TAHelper that a student has been selected
+        this.expandCardItem(clickedItem);
+        this.hideItemsByClass(clickedClass, clickedID);
+        this.showStudsInGroup(clickedID);
+        break
+      case "student":
+        this.expandCardItem(clickedItem);
+        this.hideItemsByClass(clickedClass, clickedID);
+
+        let studentName = $(clickedItem.children()[1]).html().replaceAll(' ','_').replaceAll('\'','-'); // students might have names with special characters
+        let groupID = $(clickedItem.parent()).attr("id");
+        console.log(studentName, groupID);
+        $("#content").trigger('student:clicked', [studentName, groupID]);  // notify TAHelper that a student has been selected
+        break
+      default:
+        console.log("Invalid class: " + clickedClass)
     }
+    
+    // if (clickedClass == 'student') {
+    //   clickedItem.css({ margin: "0px", "padding-top": "10px" });
+    // }
+
+    // var clickedText = $(clickedItem.children()[0]);
+    // if (clickedClass == 'session-group') {
+    //   clickedText.html(clickedText.html().replace('<br>', ' | '));
+    //   clickedText.addClass("flexContainerText");
+    // }
+
+    // var clickedGrpID = (clickedClass == 'session-group') ? clickedItem.attr("id") : clickedItem.attr("class").split(" ")[1];
+    // if (clickedClass == 'session-group') {
+    //   this.showStudsInGroup(clickedGrpID);
+    // } else {
+    //   var studentName = clickedItem.attr("id");
+    //   // console.log(studentName, clickedGrpID);
+    //   $("#content").trigger('student:clicked', [studentName, clickedGrpID]);  // notify TAHelper that a student has been selected
+    // }
+
+    // clickedItem.removeClass("flexChildren").addClass("flexContainer");
+    // this.expandCardItem(clickedItem);
   }
 
 
@@ -293,10 +341,10 @@ class TAHelperUI {
       $('.student').remove();
 
       // crude way of determining which group is selected, contains unique list of class names
-      var groupID = $('.ta-group.flexContainer').attr("id");
+      var groupID = $('.session-group.flexContainer').attr("id");
       this.showStudsInGroup(groupID);
     } else {  // backing up from student groups
-      $('.ta-group').remove();
+      $('.session-group').remove();
       this.hideBackBtn();
       this.hideEvalBtn();
       if (this.userInfo.Type != "Group Administrator") {
@@ -313,7 +361,7 @@ class TAHelperUI {
     $('.student').fadeOut(300);  // animated
 
     // crude way of determining which group is selected, contains unique list of class names
-    var groupID = $('.ta-group.flexContainer').attr("id");
+    var groupID = $('.session-group.flexContainer').attr("id");
     $('#right-menu').trigger('request:evaluations', groupID);
   }
 
@@ -328,6 +376,16 @@ class TAHelperUI {
     $('#right-menu').trigger('request:clear', {type: "all", groupInfo: this.userInfo});
   }
 
+
+  /* Hides all items with the same class name. An optional argument for an exception can be provided. */
+  hideItemsByClass (className, exceptID=null) {
+    // console.log(exceptID)
+    for (var i of $(`.${className}`)) {
+      if ( $(i).attr("id") != exceptID) {
+        $(i).hide();
+      }
+    }
+  }
 
   /* Turns left menu button visible or invisible */
   showDropdownBtn() { $('#dropdownBtn').show(); }
