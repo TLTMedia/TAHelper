@@ -1,64 +1,91 @@
 <?php
 $type = $_GET["type"];
 $filename = $_GET["filename"];
+$fn_arr = explode("_", $filename);
 
-if ($type == "student") { // student responses
-  $formURL = "studentResponses/$filename.json";
-  $template = "json/questionnaire.json";
-} else {  // group responses
-  $formURL = "groupResponses/$filename.json";
-  $template = "json/evaluation.json";
+$curr_datestr = $fn_arr[0];
+$netid = $fn_arr[1];
+$formid = $fn_arr[2];
+// var_dump($curr_datestr, $netid, $formid);
+// $datenum = strtotime($curr_datestr);
+// print($datenum);
+
+$template_file = "json/templates.json";
+if (file_exists($template_file)) {
+  $json_template = file_get_contents($template_file);
+  $decoded_template = json_decode($json_template, true);
+  // var_dump($template);
+} else {
+  echo "Template file doesn't exist";
+  exit;
+}
+
+if ($type == "student") { /* Student Evaluation */
+  $form_url = "studentResponses/$filename.json";
+  $template = $decoded_template["Student Evaluation"];
+} else {  /* Group Evaluation */
+  $form_url = "groupResponses/$filename.json";
+  $template = $decoded_template["Group Evaluation"];
 }
 
 if (!isset($_POST["data"])) { /* GET request */
-  if (file_exists($formURL)) {
-    $data = file_get_contents($formURL);
-    $decoded_data = json_decode($data);
-    print(json_encode($decoded_data->formData));
+  
+  if ($type == "student") {
+    $fn_pattern = "studentResponses/*_$netid\_$formid.json";
   } else {
-    $data = file_get_contents($template);
-    print($data);
+    $fn_pattern = "groupResponses/*_$netid\_$formid.json";
   }
 
-} else {
-
-  $data = json_decode("{}");
-
-  if ($type == "student") {  /* Student POST request */
-    $dataArray = str_replace("Group", "", explode("_", $filename));
-
-    $group_id = $dataArray[0];
-    if (count($dataArray) == 4) { // students with two first names
-      $first_name = $dataArray[1] . " " . $dataArray[2];
-      $last_name = $dataArray[3];
+  // compare datetime of all existing form responses, return most recent response
+  $matched_files = glob($fn_pattern);
+  if (sizeof($matched_files) == 0) {
+    print_r(json_encode($template));
+  } else {
+    rsort($matched_files); // most recent response should now be in index 0
+    $data = file_get_contents($matched_files[0]);
+    $decoded_data = json_decode($data, true);
+    if ($type == "student") {
+      $form_data = $decoded_data["Student Evaluation"];
     } else {
-      $first_name = $dataArray[1];
-      $last_name = $dataArray[2];
+      $form_data = $decoded_data["Group Evaluation"];
     }
-
-  } else {  /* Group POST request */
-
-    include "iam.php";
-    $taInfo = getTAInfo();
-
-    $first_name = $taInfo->nickname;
-    $last_name = $taInfo->sn;
-    $group_id = str_replace("Group", "", $filename);
+    print(json_encode($form_data));
   }
 
-  $data->firstname = $first_name;
-  $data->lastname = $last_name;
-  $data->groupid = $group_id;
+} else { /* POST request */
 
-  $decoded_data = json_decode("{}");
-  if ($type == "student") { /* Student POST request */
-    $decoded_data->studentData = $data;
-  } else {  /* Group POST request */
-    $decoded_data->taData = $data;
+  $data = $_POST["data"];
+  $form_details = $data["details"];
+  $form_data = $data["data"];
+  // var_dump($data, $form_details, $form_data);
+
+  foreach ($form_data as $key => $value) {
+    $template[$key]["Value"] = $value;
   }
-  $decoded_data->formData = $_POST['data'];
+  // print_r(json_encode($template));
 
-  file_put_contents($formURL, json_encode($decoded_data));
-  print(json_encode($decoded_data));
+  if ($type == "student") {
+    $data = array(
+      "Details" => array(
+        "Date" => $curr_datestr,
+        "Student" => str_replace('_', ' ', $form_details["Name"]),
+        "Group" => $form_details["Group"],
+        "Evaluated By" => $netid
+      ), 
+      "Student Evaluation" => $template
+    );
+  } else {
+    $data = array(
+      "Details" => array(
+        "Date" => $curr_datestr,
+        "Group" => $form_details["Group"],
+        "Evaluated By" => $netid
+      ), 
+      "Group Evaluation" => $template
+    );
+  }
+
+  print_r(json_encode($data));
+  file_put_contents($form_url, json_encode($data));
 }
 ?>

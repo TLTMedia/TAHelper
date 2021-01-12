@@ -12,9 +12,15 @@ class TAHelperModel {
     return `${this.loginInfo.nickname} ${this.loginInfo.sn}`.replaceAll(' ', '_');
   }
 
+  /* Returns the netID of the user currently logged in */
+  getLoginID() {
+    return this.loginInfo.cn;
+  }
+
   /* Returns information on all of the groups that the user oversees and the user role */
   getUserInfo (username) {
-    return this.courseInfo["TA Groups"][username];
+    var netID = this.getLoginID();
+    return Object.assign(this.courseInfo["TA Groups"][username], {netID: netID});
   }
 
   /* Returns the user role for the given username */
@@ -49,6 +55,16 @@ class TAHelperModel {
   getAllStudsForUser (username) {
     var userGroups = this.getUserGroups(username);
     return userGroups.map(grp => this.getAllStudsInGroup(grp));
+  }
+
+  /* Returns information on the student evaluation form template */
+  getStudEvalTemplate() {
+    return this.courseInfo["Student Evaluation Template"];
+  }
+
+  /* Returns information on the group evaluation form template */
+  getGroupEvalTemplate() {
+    return this.courseInfo["Group Evaluation Template"];
   }
   
 }

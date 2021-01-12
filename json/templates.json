@@ -1,0 +1,106 @@
+{
+    "Group Evaluation": [
+        {
+            "Answer Choices": [
+                "Often",
+                "Occasionally",
+                "Rarely",
+                "Not sure"
+            ],
+            "Question": "Does this group have three or more students present in class at a given time?",
+            "Type": "SC"
+        },
+        {
+            "Answer Choices": [
+                "Often",
+                "Occasionally",
+                "Rarely",
+                "Not sure"
+            ],
+            "Question": "Does every member of this group work together during group activities?",
+            "Type": "SC"
+        },
+        {
+            "Answer Choices": [
+                "Often",
+                "Occasionally",
+                "Rarely",
+                "Not sure",
+                "N/A"
+            ],
+            "Question": "If not, does the group have a 2x2 or 3x1 or 2x1 dynamic in which they have broken themselves down into sub groups?",
+            "Type": "SC"
+        },
+        {
+            "Answer Choices": [
+                "Often",
+                "Occasionally",
+                "Rarely",
+                "Not sure"
+            ],
+            "Question": "Do most members bring their name tags?",
+            "Type": "SC"
+        },
+        {
+            "Answer Choices": [
+                "Often",
+                "Occasionally",
+                "Rarely",
+                "Not sure"
+            ],
+            "Question": "Does one member of the group dominate the discussion?",
+            "Type": "SC"
+        },
+        {
+            "Answer Choices": [],
+            "Question": "Comments",
+            "Type": "TA"
+        }
+    ],
+    "Student Evaluation": [
+        {
+            "Answer Choices": [
+                "Often",
+                "Occasionally",
+                "Rarely",
+                "Not sure"
+            ],
+            "Question": "How often is this student present in class?",
+            "Type": "SC"
+        },
+        {
+            "Answer Choices": [
+                "Often",
+                "Occasionally",
+                "Rarely",
+                "Not sure"
+            ],
+            "Question": "How often is this student engaged in off-task behavior?",
+            "Type": "SC"
+        },
+        {
+            "Answer Choices": [
+                "Often",
+                "Occasionally",
+                "Rarely",
+                "Not sure"
+            ],
+            "Question": "How often does this student share their ideas, confusions, or knowledge?",
+            "Type": "SC"
+        },
+        {
+            "Answer Choices": [
+                "Exceptional",
+                "Satisfactory",
+                "Unsatisfactory"
+            ],
+            "Question": "How would you rate this student?",
+            "Type": "SC"
+        },
+        {
+            "Answer Choices": [],
+            "Question": "Comments",
+            "Type": "TA"
+        }
+    ]
+}

@@ -23,113 +23,101 @@ class TAHelper {
 
       this.ui.showHomePage().then(done => {
         // install an event listener to be triggered when a student has been selected
-        $('#content').on('student:clicked', (evt, studName, groupID) => {
-          // console.log(studInfo, groupID)
-          this.loadForm("student", studName, groupID); // [0] = student name, [1] = group id
+        $('#content').on('request:student-eval', (evt, evaluatorID, studentID) => {
+          // console.log(evaluatorID, studentID)
+          this.loadForm("student", studentID, evaluatorID);
         });
 
-        // install an event listener to be triggered when group evaluations button is selected
-        $('#right-menu').on('request:evaluations', (evt, groupID) => {
-          // console.log(groupID)
-          this.loadForm("group", null, groupID);
+        // install an event listener to be triggered when a student has been selected
+        $('#content').on('request:group-eval', (evt, evaluatorID, groupID) => {
+          this.loadForm("group", groupID, evaluatorID);
         });
 
-        // install an event listener to be triggered when a download request is made
-        $('#right-menu').on('request:download', (evt, data) => {
-          var type = data.type;
-          var groups = data.groupInfo.Group;
-          // console.log(data, type, groups)
-          if (type == "all") {
-            this.makeRequest("download", "student", groups).then(()=> this.makeRequest("download", "group", groups));
-          } else {
-            this.makeRequest("download", type, groups);
-          }
+        // install an event listener to be triggered when a save button is clicked
+        $('#content').on('request:save-eval', (evt, formType, formID, evaluatorID, data) => {
+          console.log(evaluatorID, formID, formType, data)
+          this.updateForm(formType, formID, evaluatorID, data);
         });
 
-        // install an event listener to be triggered when a clear request is made
-        $('#right-menu').on('request:clear', (evt, data) => {
-          var type = data.type;
-          var groups = data.groupInfo.Group;
-          // console.log(data, type, groups)
-          if (type == "all") {
-            if (confirm("Are you sure you would like to clear all responses?")) {
-              this.makeRequest("clear", "student", groups).then(()=> this.makeRequest("clear", "group", groups));
-              alert("All student evaluation responses have been cleared.");
-              location.reload();  // reloads page, brings user back to the home page
-            }
-          }
-          // else {
-          //   this.makeRequest("clear", type, groups);
-          // }
-        });
+        // // install an event listener to be triggered when group evaluations button is selected
+        // $('#right-menu').on('request:evaluations', (evt, groupID) => {
+        //   // console.log(groupID)
+        //   this.loadForm("group", null, groupID);
+        // });
+
+        // // install an event listener to be triggered when a download request is made
+        // $('#right-menu').on('request:download', (evt, data) => {
+        //   var type = data.type;
+        //   var groups = data.groupInfo.Group;
+        //   // console.log(data, type, groups)
+        //   if (type == "all") {
+        //     this.makeDownloadRequest("download", "student", groups).then(()=> this.makeDownloadRequest("download", "group", groups));
+        //   } else {
+        //     this.makeDownloadRequest("download", type, groups);
+        //   }
+        // });
+
+        // // install an event listener to be triggered when a clear request is made
+        // $('#right-menu').on('request:clear', (evt, data) => {
+        //   var type = data.type;
+        //   var groups = data.groupInfo.Group;
+        //   // console.log(data, type, groups)
+        //   if (type == "all") {
+        //     if (confirm("Are you sure you would like to clear all responses?")) {
+        //       this.makeDownloadRequest("clear", "student", groups).then(()=> this.makeDownloadRequest("clear", "group", groups));
+        //       alert("All student evaluation responses have been cleared.");
+        //       location.reload();  // reloads page, brings user back to the home page
+        //     }
+        //   }
+        //   // else {
+        //   //   this.makeDownloadRequest("clear", type, groups);
+        //   // }
+        // });
       });
     });
   }
 
 
   /* Initializes or retrieves a new or existing form */
-  loadForm (type, studentName, groupID) {
-    // console.log(type, studentName, groupID)
-    var url = (type == "student") ?
-      `responseInfo.php?type=${type}&filename=Group${groupID}_${studentName}` :
-      `responseInfo.php?type=${type}&filename=Group${groupID}`;
+  loadForm (type, id, evaluatorID) {
+    var datetime = this.getCurrentDate();
+    var filename = `${datetime}_${evaluatorID}_${id}`;
+    var url = `responseInfo.php?type=${type}&filename=${filename}`;
 
+    console.log(url)
     $.getJSON(url).done(result => {
-      // console.log(result, result.formData)
-      // check for existing form data (null means no previous form data was saved)
-      if (result.formData != null) {
-        result = result.formData;
-      }
-
-      // set ui template
+      // console.log(result)
       switch (type) {
         case "student":
-          this.ui.setQuesTemplate(result);
-          this.ui.showStudForm(studentName, groupID);
-          break;
+          this.ui.showStudForm(result, id);
+          break
         case "group":
-          this.ui.setEvalTemplate(result);
-          this.ui.showGroupForm(groupID);
-          break;
+          this.ui.showGroupForm(result, id);
+          break
         default:
-          console.log("Invalid type: ", type)
+          console.log("Invalid form type: ", type)
           return;
       }
+    });
+  }
 
-      // add event listeners to UI elements
-      // var id = (type == "student") ? studentName : "group-evaluations";
 
-      $(`#questionnaire input`).on('input change', evt => {
-        let parent = $(evt.currentTarget.parentNode);
-        var className = parent.attr("id").split('-')[1];
-        className = className.charAt(0).toUpperCase() + className.slice(1); // capitalizing first letter
+  /* Post updated form results to the appropriate file in database */
+  updateForm (type, id, evaluatorID, data) {
+    var datetime = this.getCurrentDate();
+    var filename = `${datetime}_${evaluatorID}_${id}`;
+    var url = `responseInfo.php?type=${type}&filename=${filename}`;
 
-        var value = $(evt.currentTarget).val();
-        // console.log(className, value)
-
-        if (evt.type == 'change') {
-          this.updateUI(type, className, value);
-          this.sendQuestionnaire(url, result);
-        }
-      });
-
-      $(`#questionnaire textarea`).on('change blur', evt => {
-        let parent = $(evt.currentTarget.parentNode);
-        var className = parent.attr("id").split('-')[1];
-        className = className.charAt(0).toUpperCase() + className.slice(1); // capitalizing first letter
-
-        var value = $(evt.currentTarget).val();
-        // console.log(className, value)
-
-        this.updateUI(type, className, value);
-        this.sendQuestionnaire(url, result);
-      });
+    $.post(url, { data: data }).done(() => {
+      this.ui.showSavedLabel(); // notify user that changes have been saved to database
+    }).fail(() => {
+      console.log("Failed to update form");
     });
   }
 
 
   /* Makes a download or clear request for responses in the database */
-  makeRequest (request, type, groupInfo) {
+  makeDownloadRequest (request, type, groupInfo) {
     // console.log(request, type)
     var url = `csvInfo.php?request=${request}&type=${type}`;
 
@@ -152,16 +140,13 @@ class TAHelper {
     });
   }
 
-
-  /* Update form UI to correctly reflect changes to data */
-  updateUI (type, question, val) {
-    this.ui.setValue(type, question, val);
-  }
-
-
-  /* Post updated results to student's copy of questionnaire */
-  sendQuestionnaire (url, form) {
-    $.post(url, { data: form });
+  /* Returns the current date in YYYY-MM-DD string format */
+  getCurrentDate() {
+    var datetime = new Date();
+    let year = datetime.getFullYear();
+    let month = (datetime.getMonth()+1 < 10) ? `0${datetime.getMonth()+1}` : datetime.getMonth()+1;
+    let date = (datetime.getDate() < 10) ? `0${datetime.getDate()}` : datetime.getDate();
+    return `${year}-${month}-${date}`;
   }
 
 }

@@ -1,5 +1,6 @@
 /*** CSS content for TAHelper ***/
 @import "flex.css";
+@import "modal.css";
 @import "menu.css";
 
 html, body {
@@ -22,45 +23,74 @@ div.subcard-item {
   margin: 10px 20px;
 }
 
+div.selected-group {
+  width: 100% !important;
+}
+
+div.selected-student {
+  width: 100% !important;
+  margin: 0px !important;
+  padding-top: 10px !important;
+  padding-bottom: 20px !important;
+}
+
+form {
+  width: 100%;
+}
+
+form.group-form {
+  margin: 0px;
+  padding: 0px 30px 20px 30px; /* top right bottom left */
+  background-color: lightsteelblue;
+  text-align: left;
+}
+
 div.form-element {
   font-size: 25px;
-  margin-top: 10px;
-  margin-left: 20px;
+  margin: 20px 10px;
 }
 
 div.form-element text {
   font-size: 20px;
 }
 
-/* input, textarea {
-  width: 100%;
-  margin: 0px 50px;
-  resize: none;
-} */
-
 input[type=radio] {
   width: 2%;
   margin: 0px 10px;
 }
 
-input[type=datetime-local] {
-  width: 20%;
-  margin: 0px 5px;
-}
 
 button {
   cursor: pointer;
 }
 
-label {
-  width: 100%;
-  display: block;
+button.save-button {
+  /* margin-left: 20px;
+  margin-right: 10px; */
+  padding: 5px 10px;
+  background-color: blue;
+  border-style: hidden;
+  color: white;
+  font-size: 18px;
 }
 
 textarea {
-  width: 100%;
+  width: 99%;
   height: 100px;
+  font-family: sans-serif;
   outline: none;
+  resize: none;
+}
+
+/* label {
+  width: 100%;
+  display: block;
+} */
+
+label.form-option {
+  font-size: 20px;
+  font-weight: bold;
+  margin-right: 10px;
 }
 
 img {
@@ -73,12 +103,16 @@ img.profile {
   margin: auto;
 }
 
-img.minimize {
+img.profile-left {
+  margin: 10px 30px;
+}
+
+/* img.minimize {
   width: 50px;
   height: 50px;
   margin: 5px;
   margin-left: 10px;
-}
+} */
 
 .header-width {
   width: 100%;
@@ -97,6 +131,13 @@ img.minimize {
   color: gray;
 }
 
+.question-label {
+  background-color: lightslategray;
+  color: darkblue;
+  font-weight: bold;
+  padding: 0px 10px;
+}
+
 div#content {
   margin: 0px 50px;
   justify-content: center;
@@ -110,6 +151,38 @@ div#header {
   justify-content: center;
 }
 
-div#questionnaire {
-  margin: 0px 30px;
+div#group-evaluation-div {
+  width: 100%;
+  display: block;
+  outline: none;
+  border: none;
+  padding: 5px 20px;
+  background-color: lightsteelblue;
+  font-weight: bold;
+  text-align: right;
+}
+
+div#form-save-div {
+  width: 100%;
+  text-align: center;
+  justify-content: center;
+}
+
+label#no-students-label {
+  margin: auto;
+  margin-bottom: 10px;
+  color: red;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+label#form-saved-label {
+  display: block;
+  margin: auto;
+  margin-bottom: 5px;
+  font-style: italic;
+}
+
+a#group-evaluation-link {
+  color: black;
 }
