@@ -7,6 +7,7 @@ class TAHelper {
     // console.log(this.courseInfo, this.loginInfo)
   }
 
+
   load() {
     // load model and gui scripts
     var model = $.get("./js/TAHelperModel.js");
@@ -14,85 +15,67 @@ class TAHelper {
 
     $.when(model, ui).done(() => {
       this.model = new TAHelperModel(this.courseInfo, this.loginInfo);
-      
-      var user = this.model.getLoginName();
+
+      var user = this.model.getLoginID();
       var userInfo = this.model.getUserInfo(user);
       var studInfo = this.model.getAllStudsForUser(user);
       this.ui = new TAHelperUI(userInfo, studInfo);
-      console.log(this.model, this.ui)
+      // console.log(this.model, this.ui)
 
-      this.ui.showHomePage().then(done => {
+      this.ui.showHomePage().then(() => {
+        this.ui.hideLoader();
+
         // install an event listener to be triggered when a student has been selected
-        $('#content').on('request:student-eval', (evt, evaluatorID, studentID) => {
-          // console.log(evaluatorID, studentID)
-          this.loadForm("student", studentID, evaluatorID);
+        $('#content').on('request:student-eval', (evt, evaluatorID, groupID, studentID) => {
+          // console.log(evaluatorID, groupID, studentID)
+          this.loadForm("student", evaluatorID, groupID, studentID);
         });
 
         // install an event listener to be triggered when a student has been selected
         $('#content').on('request:group-eval', (evt, evaluatorID, groupID) => {
-          this.loadForm("group", groupID, evaluatorID);
+          // console.log(evaluatorID, groupID)
+          this.loadForm("group", evaluatorID, groupID);
         });
 
         // install an event listener to be triggered when a save button is clicked
-        $('#content').on('request:save-eval', (evt, formType, formID, evaluatorID, data) => {
-          console.log(evaluatorID, formID, formType, data)
-          this.updateForm(formType, formID, evaluatorID, data);
+        $('#content').on('request:save-eval', (evt, formType, evaluatorID, groupID, studentID, data) => {
+          // console.log(evaluatorID, evaluatorID, groupID, studentID, data)
+          this.updateForm(formType, evaluatorID, groupID, studentID, data);
         });
 
-        // // install an event listener to be triggered when group evaluations button is selected
-        // $('#right-menu').on('request:evaluations', (evt, groupID) => {
-        //   // console.log(groupID)
-        //   this.loadForm("group", null, groupID);
-        // });
+        // install an event listener to be triggered when a download request is made
+        $('#content').on('request:download-eval', (evt, dataType, data) => {
+          // console.log(dataType, data);
+          this.downloadResponses(dataType, data);
+        });
 
-        // // install an event listener to be triggered when a download request is made
-        // $('#right-menu').on('request:download', (evt, data) => {
-        //   var type = data.type;
-        //   var groups = data.groupInfo.Group;
-        //   // console.log(data, type, groups)
-        //   if (type == "all") {
-        //     this.makeDownloadRequest("download", "student", groups).then(()=> this.makeDownloadRequest("download", "group", groups));
-        //   } else {
-        //     this.makeDownloadRequest("download", type, groups);
-        //   }
-        // });
-
-        // // install an event listener to be triggered when a clear request is made
-        // $('#right-menu').on('request:clear', (evt, data) => {
-        //   var type = data.type;
-        //   var groups = data.groupInfo.Group;
-        //   // console.log(data, type, groups)
-        //   if (type == "all") {
-        //     if (confirm("Are you sure you would like to clear all responses?")) {
-        //       this.makeDownloadRequest("clear", "student", groups).then(()=> this.makeDownloadRequest("clear", "group", groups));
-        //       alert("All student evaluation responses have been cleared.");
-        //       location.reload();  // reloads page, brings user back to the home page
-        //     }
-        //   }
-        //   // else {
-        //   //   this.makeDownloadRequest("clear", type, groups);
-        //   // }
-        // });
+        // install an event listener to be triggered when a clear request is made
+        $('#content').on('request:clear-eval', (evt, dataType, data) => {
+          // console.log(dataType, data);
+          this.clearResponses(dataType, data);
+        });
       });
     });
   }
 
 
   /* Initializes or retrieves a new or existing form */
-  loadForm (type, id, evaluatorID) {
+  loadForm (type, evaluatorID=null, groupID=null, studentID=null) {
     var datetime = this.getCurrentDate();
-    var filename = `${datetime}_${evaluatorID}_${id}`;
-    var url = `responseInfo.php?type=${type}&filename=${filename}`;
-
-    console.log(url)
+    var filename = (type == "student") ? `${evaluatorID}_${groupID}_${studentID}` : `${evaluatorID}_${groupID}`;
+    var url = `evaluationInfo.php?type=${type}&date=${datetime}&filename=${filename}`;
+    // console.log(url)
+    
+    this.ui.showLoader();
     $.getJSON(url).done(result => {
       // console.log(result)
+      this.ui.hideLoader();
       switch (type) {
         case "student":
-          this.ui.showStudForm(result, id);
+          this.ui.showStudForm(result, studentID);
           break
         case "group":
-          this.ui.showGroupForm(result, id);
+          this.ui.showGroupForm(result, groupID);
           break
         default:
           console.log("Invalid form type: ", type)
@@ -103,43 +86,46 @@ class TAHelper {
 
 
   /* Post updated form results to the appropriate file in database */
-  updateForm (type, id, evaluatorID, data) {
+  updateForm (type, evaluatorID=null, groupID=null, studentID=null, data) {
     var datetime = this.getCurrentDate();
-    var filename = `${datetime}_${evaluatorID}_${id}`;
-    var url = `responseInfo.php?type=${type}&filename=${filename}`;
+    var filename = (type == "student") ? `${evaluatorID}_${groupID}_${studentID}` : `${evaluatorID}_${groupID}`;
+    var url = `evaluationInfo.php?type=${type}&date=${datetime}&filename=${filename}`;
 
-    $.post(url, { data: data }).done(() => {
-      this.ui.showSavedLabel(); // notify user that changes have been saved to database
+    $.post(url, {data: data}).done(() => {
+      this.ui.setHasUnsavedChanges(false);
+      this.ui.updateState();
     }).fail(() => {
       console.log("Failed to update form");
     });
   }
 
 
-  /* Makes a download or clear request for responses in the database */
-  makeDownloadRequest (request, type, groupInfo) {
-    // console.log(request, type)
-    var url = `csvInfo.php?request=${request}&type=${type}`;
+  /* Download responses from the database */
+  downloadResponses (type, data=null) {
+    var url = `responseInfo.php?request=download&type=${type}`;
+    // console.log(type, data, url)
 
-    var taGroups = [];
-    $.each(groupInfo, function(i) {
-      var groupID = groupInfo[i].id;
-      taGroups.push(groupID);
-    });
-
-    return $.post(url, {groups: taGroups}).done(result => {
-      // console.log(result)
-      if (request == "download") {
-        var capType = type.substr(0,1).toUpperCase() + type.substr(1).toLowerCase();
-        var hiddenElement = document.createElement('a');
-        hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(result);
-        hiddenElement.target = '_blank';
-        hiddenElement.download = `${capType} Evaluations.csv`;
-        hiddenElement.click();
-      }
+    $.post(url, {data: data}).done(result => {
+      var hiddenElement = document.createElement('a');
+      hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(result);
+      hiddenElement.target = '_blank';
+      hiddenElement.download = 'BIO201 Evaluations.csv';
+      hiddenElement.click();
+      console.log("done")
     });
   }
 
+
+  /* Clear responses in the database */
+  clearResponses (type, data=null) {
+    var url = `responseInfo.php?request=clear&type=${type}`;
+    $.post(url, {data: data}).done(() => {
+      // TODO: show some sort of alert to user that request was completed
+      console.log("done")
+    });
+  }
+
+  
   /* Returns the current date in YYYY-MM-DD string format */
   getCurrentDate() {
     var datetime = new Date();

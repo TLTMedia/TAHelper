@@ -1,6 +1,5 @@
 /*** Main Javascript file ***/
 
-/* Global variable */
 var taHelper;
 
 function init() {
@@ -14,5 +13,4 @@ function init() {
   });
 }
 
-// calls the init function
 $(init);
